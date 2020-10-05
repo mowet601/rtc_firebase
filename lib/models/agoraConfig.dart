@@ -1,2 +1,0 @@
-// const String AGORA_APP_ID = '082f27f2d4724813876afce3d713de14';
-const String AGORA_APP_ID = '0f5d34387a224800995b071c61f5ade2';
