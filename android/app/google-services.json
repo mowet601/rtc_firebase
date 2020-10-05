@@ -1,0 +1,85 @@
+{
+  "project_info": {
+    "project_number": "762463370262",
+    "firebase_url": "https://stellar-videocalls-agedcare.firebaseio.com",
+    "project_id": "stellar-videocalls-agedcare",
+    "storage_bucket": "stellar-videocalls-agedcare.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762463370262:android:733c4e789feba39aea8937",
+        "android_client_info": {
+          "package_name": "com.example.ac_videocall"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "762463370262-dmj0iktebd2j5n62jurbtn3nki5au135.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ac_videocall",
+            "certificate_hash": "0e9d57cc497ca6cc50274e8b6d7ea7aeb741e50e"
+          }
+        },
+        {
+          "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbZJ3Q0ZDhCLdpBwaSYiBEbSjRk5LocU4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762463370262:android:7820fea6567e551cea8937",
+        "android_client_info": {
+          "package_name": "com.example.webrtc_test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "762463370262-0rkkjpj940cpdjt6or8rnqmppf1bd944.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.webrtc_test",
+            "certificate_hash": "0e9d57cc497ca6cc50274e8b6d7ea7aeb741e50e"
+          }
+        },
+        {
+          "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbZJ3Q0ZDhCLdpBwaSYiBEbSjRk5LocU4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
