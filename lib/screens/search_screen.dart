@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webrtc_test/models/contactModel.dart';
+import 'package:webrtc_test/models/userModel.dart';
+import 'package:webrtc_test/models/userProvider.dart';
+import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 
 import 'package:webrtc_test/screens/custom_tile.dart';
 import 'package:webrtc_test/string_constant.dart';
-import 'package:webrtc_test/utilityMan.dart';
 
 import 'chat_screen.dart';
 
@@ -18,6 +22,7 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Map<String, dynamic>> _listofusers = List<Map<String, dynamic>>();
   String _query = '';
   TextEditingController _searchController = TextEditingController();
+  MyUser _myUser;
 
   @override
   void initState() {
@@ -27,12 +32,16 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: getSearchAppBar(),
-        body: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: getSearchSuggestions(_query),
-        ));
+    final UserProvider userProvider = Provider.of<UserProvider>(context);
+    _myUser = userProvider.getUser;
+    return PickupLayout(
+      scaffold: Scaffold(
+          appBar: getSearchAppBar(),
+          body: Container(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: getSearchSuggestions(_query),
+          )),
+    );
   }
 
   //
@@ -105,7 +114,8 @@ class _SearchScreenState extends State<SearchScreen> {
       itemBuilder: ((context, index) {
         var thisUser = suggestionList[index];
         return CustomTile(
-          onTap: () {
+          onTap: () async {
+            add2Contacts(thisUser);
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -139,6 +149,45 @@ class _SearchScreenState extends State<SearchScreen> {
   //
   // -------------- BIZNESS LOGIC --------------------
   //
+
+  add2Contacts(Map<String, dynamic> contactMap) async {
+    Timestamp timenow = Timestamp.now();
+    ContactModel contact = ContactModel.fromMap(contactMap);
+    DocumentSnapshot doc = await _firestore
+        .collection(USERS_COLLECTION)
+        .doc(_myUser.uid)
+        .collection(CONTACTS_COLLECTION)
+        .doc(contact.uid)
+        .get();
+
+    if (!doc.exists) {
+      var newcontactmap = contact.toMap();
+      await _firestore
+          .collection(USERS_COLLECTION)
+          .doc(_myUser.uid)
+          .collection(CONTACTS_COLLECTION)
+          .doc(contact.uid)
+          .set(newcontactmap);
+    }
+
+    DocumentSnapshot doc2 = await _firestore
+        .collection(USERS_COLLECTION)
+        .doc(contact.uid)
+        .collection(CONTACTS_COLLECTION)
+        .doc(_myUser.uid)
+        .get();
+    if (!doc2.exists) {
+      ContactModel newcontact = ContactModel(
+          uid: _myUser.uid, fullname: _myUser.name, timeAdded: timenow);
+      var newcontactmap = newcontact.toMap();
+      await _firestore
+          .collection(USERS_COLLECTION)
+          .doc(contact.uid)
+          .collection(CONTACTS_COLLECTION)
+          .doc(_myUser.uid)
+          .set(newcontactmap);
+    }
+  }
 
   getListofUsers() async {
     QuerySnapshot q = await _firestore.collection(USERS_COLLECTION).get();

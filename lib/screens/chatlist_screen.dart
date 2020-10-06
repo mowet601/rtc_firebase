@@ -1,67 +1,27 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:webrtc_test/models/contactModel.dart';
+import 'package:webrtc_test/models/userProvider.dart';
+import 'package:webrtc_test/string_constant.dart';
 
 import 'custom_tile.dart';
 
-class ChatListScreen extends StatefulWidget {
-  @override
-  _ChatListScreenState createState() => _ChatListScreenState();
-}
-
-class _ChatListScreenState extends State<ChatListScreen> {
-  String currentUser = '';
-
-  @override
-  void initState() {
-    super.initState();
-    getCurrentUserfromPrefs();
-  }
-
-  void getCurrentUserfromPrefs() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      currentUser = prefs.getString('myemail').split('@')[0];
-    });
-  }
-
+class ChatListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final UserProvider userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(
-            Icons.notifications,
-            color: Colors.white,
-          ),
-          onPressed: () {},
-        ),
-        title: getUsernameBar(),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.search,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              Navigator.pushNamed(context, '/search');
-            },
-          ),
-          // IconButton(
-          //   icon: Icon(
-          //     Icons.more_vert,
-          //     color: Colors.white,
-          //   ),
-          //   onPressed: () {},
-          // ),
-        ],
+        title: getUsernameBar(userProvider.getUser.name.split(' ')[0]),
       ),
-      floatingActionButton: newChatButton(),
-      body: ChatListContainer(currentUser),
+      floatingActionButton: searchButton(context),
+      body: ChatListContainer(myUserId: userProvider.getUser.uid),
     );
   }
 
-  Widget getUsernameBar() {
+  Widget getUsernameBar(String name) {
     return Container(
       height: 40,
       decoration: BoxDecoration(
@@ -72,7 +32,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         children: [
           Align(
             alignment: Alignment.center,
-            child: Text(currentUser.toUpperCase(),
+            child: Text(name,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.blueAccent,
@@ -95,7 +55,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 
-  Widget newChatButton() {
+  Widget searchButton(BuildContext c) {
     return Container(
       decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -103,70 +63,140 @@ class _ChatListScreenState extends State<ChatListScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(40)),
-      child: Icon(
-        Icons.edit,
+      child: IconButton(
+        icon: Icon(Icons.search),
         color: Colors.white,
-        size: 25,
+        iconSize: 25,
+        onPressed: () {
+          Navigator.pushNamed(c, '/search');
+        },
       ),
       padding: EdgeInsets.all(15),
     );
   }
 }
 
-class ChatListContainer extends StatefulWidget {
-  final String currentUserId;
+class ChatListContainer extends StatelessWidget {
+  final String myUserId;
 
-  const ChatListContainer(this.currentUserId);
+  const ChatListContainer({this.myUserId});
 
-  @override
-  _ChatListContainerState createState() => _ChatListContainerState();
-}
-
-class _ChatListContainerState extends State<ChatListContainer> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: ListView.builder(
-          padding: EdgeInsets.all(10),
-          itemCount: 2,
-          itemBuilder: (context, index) {
-            return CustomTile(
-              mini: false,
-              onTap: () {},
-              title: Text(
-                'DUMMY DATA',
-                style: TextStyle(fontSize: 19),
-              ),
-              subtitle: Text(
-                'Last received messsage: Hello World!',
-                style: TextStyle(color: Colors.black38, fontSize: 14),
-              ),
-              leading: Container(
-                constraints: BoxConstraints(maxHeight: 50, maxWidth: 50),
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      maxRadius: 30,
-                      backgroundColor: Colors.grey,
-                      backgroundImage: NetworkImage(
-                          'https://media-exp1.licdn.com/dms/image/C5603AQGCe3CwEl_Jmw/profile-displayphoto-shrink_200_200/0?e=1606348800&v=beta&t=YmLJ31uRSUsEJHGBCBZcPRm8nqA2isG2xS2tI_oJMMc'),
-                    ),
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: Container(
-                        height: 13,
-                        width: 13,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.green,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
+      child: StreamBuilder<QuerySnapshot>(
+          stream: fetchContacts(myUserId),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              var docList = snapshot.data.docs;
+              if (docList.isEmpty) {
+                return quietBox();
+              } else
+                return ListView.builder(
+                    padding: EdgeInsets.all(10),
+                    itemCount: docList.length,
+                    itemBuilder: (context, index) {
+                      ContactModel contact =
+                          ContactModel.fromMap(docList[index].data());
+                      return contactTile(contact);
+                    });
+            }
+            return Center(
+              child: CircularProgressIndicator(),
             );
           }),
+    );
+  }
+
+  Widget contactTile(ContactModel contact) {
+    return CustomTile(
+      mini: false,
+      onTap: () {},
+      title: Text(
+        contact.fullname,
+        style: TextStyle(fontSize: 19),
+      ),
+      subtitle: Text(
+        contact.email,
+        style: TextStyle(color: Colors.black38, fontSize: 14),
+      ),
+      trailing: Text(
+        contact.uid,
+        style: TextStyle(color: Colors.grey, fontSize: 10),
+      ),
+      leading: Container(
+        constraints: BoxConstraints(maxHeight: 50, maxWidth: 50),
+        child: Stack(
+          children: [
+            CircleAvatar(
+              maxRadius: 30,
+              backgroundColor: Colors.grey,
+              backgroundImage: NetworkImage(contact.profilePhoto),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Container(
+                height: 13,
+                width: 13,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color:
+                      Colors.purple, // TODO : implement online status flagging
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Stream<QuerySnapshot> fetchContacts(String userId) {
+    return FirebaseFirestore.instance
+        .collection(USERS_COLLECTION)
+        .doc(userId)
+        .collection(CONTACTS_COLLECTION)
+        .snapshots();
+  }
+
+  Widget quietBox() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 25),
+        child: Container(
+          color: Colors.blueGrey[200],
+          padding: EdgeInsets.symmetric(vertical: 35, horizontal: 25),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'This is where all the Contacts are listed',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 30,
+                ),
+              ),
+              SizedBox(height: 25),
+              Text(
+                'Search for your friends & family to chat or call them',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.normal,
+                  fontSize: 20,
+                ),
+              ),
+              SizedBox(height: 25),
+              Text(
+                'Tap the round floating Search button start',
+                // style: TextStyle(color: Colors.grey),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

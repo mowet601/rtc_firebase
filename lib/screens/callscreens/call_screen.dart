@@ -208,9 +208,15 @@ class _CallScreenState extends State<CallScreen> {
     switch (views.length) {
       case 1:
         return Container(
-            child: Column(
-          children: <Widget>[_videoView(views[0])],
-        ));
+          child: Stack(
+            children: [
+              Column(children: <Widget>[
+                Text('Calling ' + widget.call.receiverName)
+              ]),
+              Column(children: <Widget>[_videoView(views[0])])
+            ],
+          ),
+        );
       case 2:
         return Container(
             child: Column(

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webrtc_test/models/messageModel.dart';
 import 'package:webrtc_test/models/userModel.dart';
 import 'package:webrtc_test/screens/callscreens/call_utilities.dart';
+import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 import 'package:webrtc_test/string_constant.dart';
 import '../utilityMan.dart';
 
@@ -63,49 +64,54 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     // _imageUploadProvider = Provider.of<ImageUploadProvider>(context);
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(_receiverUser.name),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.videocam),
-            onPressed: () async =>
-                await MyPermissions.isCameraAndMicPermissionsGranted()
-                    ? CallUtils.dial(
-                        from: _senderUser, to: _receiverUser, context: context)
-                    : Utils.makeToast('Permissions not granted to make call',
-                        Colors.deepOrange),
+    return PickupLayout(
+      scaffold: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
           ),
-          // IconButton(
-          //   icon: Icon(Icons.phone),
-          //   onPressed: () {},
-          // ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // RaisedButton(
-          //     child: Text('Change ViewState'),
-          //     onPressed: () {
-          //       _imageUploadProvider.getViewState == ViewState.LOADING
-          //           ? _imageUploadProvider.setToidle()
-          //           : _imageUploadProvider.setToLoading();
-          //     }),
-          Flexible(child: getMessageList()),
-          isImageLoading
-              ? Container(
-                  alignment: Alignment.centerRight,
-                  margin: EdgeInsets.only(right: 15),
-                  child: CircularProgressIndicator(),
-                )
-              : Container(),
-          getChatControls(),
-          showEmojipicker ? Container(child: emojiContainer()) : Container(),
-        ],
+          title: Text(_receiverUser.name),
+          actions: [
+            IconButton(
+              padding: EdgeInsets.only(right: 16),
+              icon: Icon(Icons.videocam),
+              onPressed: () async =>
+                  await MyPermissions.isCameraAndMicPermissionsGranted()
+                      ? CallUtils.dial(
+                          from: _senderUser,
+                          to: _receiverUser,
+                          context: context)
+                      : Utils.makeToast('Permissions not granted to make call',
+                          Colors.deepOrange),
+            ),
+            // IconButton(
+            //   icon: Icon(Icons.phone),
+            //   onPressed: () {},
+            // ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // RaisedButton(
+            //     child: Text('Change ViewState'),
+            //     onPressed: () {
+            //       _imageUploadProvider.getViewState == ViewState.LOADING
+            //           ? _imageUploadProvider.setToidle()
+            //           : _imageUploadProvider.setToLoading();
+            //     }),
+            Flexible(child: getMessageList()),
+            isImageLoading
+                ? Container(
+                    alignment: Alignment.centerRight,
+                    margin: EdgeInsets.only(right: 15),
+                    child: CircularProgressIndicator(),
+                  )
+                : Container(),
+            getChatControls(),
+            showEmojipicker ? Container(child: emojiContainer()) : Container(),
+          ],
+        ),
       ),
     );
   }

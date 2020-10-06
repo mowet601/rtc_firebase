@@ -15,8 +15,8 @@ class PickupLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final UserProvider userProvider = Provider.of<UserProvider>(context);
-    print('userprovider? ' + (userProvider != null).toString());
-    print('userprovider.getuser? ' + (userProvider.getUser != null).toString());
+    // print('userprovider? ' + (userProvider != null).toString());
+    // print('userprovider.getuser? ' + (userProvider.getUser != null).toString());
     return (userProvider != null && userProvider.getUser != null)
         ? StreamBuilder<DocumentSnapshot>(
             stream: callMethods.callStream(uid: userProvider.getUser.uid),
