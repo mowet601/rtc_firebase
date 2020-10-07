@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webrtc_test/models/contactModel.dart';
 import 'package:webrtc_test/models/userProvider.dart';
+import 'package:webrtc_test/screens/chat_screen.dart';
 import 'package:webrtc_test/string_constant.dart';
+import 'package:webrtc_test/utilityMan.dart';
 
 import 'custom_tile.dart';
 
@@ -12,46 +14,8 @@ class ChatListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final UserProvider userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: getUsernameBar(userProvider.getUser.name.split(' ')[0]),
-      ),
       floatingActionButton: searchButton(context),
       body: ChatListContainer(myUserId: userProvider.getUser.uid),
-    );
-  }
-
-  Widget getUsernameBar(String name) {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(50),
-        color: Colors.white,
-      ),
-      child: Stack(
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Text(name,
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
-                    fontSize: 13)),
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Container(
-              height: 13,
-              width: 13,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                // border: Border.all(width: 1, color: Colors.black),
-                color: Colors.green,
-              ),
-            ),
-          )
-        ],
-      ),
     );
   }
 
@@ -98,7 +62,7 @@ class ChatListContainer extends StatelessWidget {
                     itemBuilder: (context, index) {
                       ContactModel contact =
                           ContactModel.fromMap(docList[index].data());
-                      return contactTile(contact);
+                      return contactTile(contact, context);
                     });
             }
             return Center(
@@ -108,10 +72,17 @@ class ChatListContainer extends StatelessWidget {
     );
   }
 
-  Widget contactTile(ContactModel contact) {
+  Widget contactTile(ContactModel contact, BuildContext context) {
     return CustomTile(
       mini: false,
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(receiver: contact.toMap()),
+          ),
+        );
+      },
       title: Text(
         contact.fullname,
         style: TextStyle(fontSize: 19),
@@ -131,20 +102,25 @@ class ChatListContainer extends StatelessWidget {
             CircleAvatar(
               maxRadius: 30,
               backgroundColor: Colors.grey,
-              backgroundImage: NetworkImage(contact.profilePhoto),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Container(
-                height: 13,
-                width: 13,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color:
-                      Colors.purple, // TODO : implement online status flagging
-                ),
+              child: CachedImage(
+                contact.profilePhoto,
+                radius: 30,
+                isRound: true,
               ),
-            )
+            ),
+            // TODO : implement online status flagging
+            // Align(
+            //   alignment: Alignment.bottomRight,
+            //   child: Container(
+            //     height: 13,
+            //     width: 13,
+            //     decoration: BoxDecoration(
+            //       shape: BoxShape.circle,
+            //       color:
+            //           Colors.purple,
+            //     ),
+            //   ),
+            // )
           ],
         ),
       ),

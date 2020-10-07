@@ -97,7 +97,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget getSearchSuggestions(String q) {
-    // TODO: add more fields to search over (name / userid)
+    // TODO: fine tune search using regex / patterns
     final List<Map<String, dynamic>> suggestionList = _query.isEmpty
         ? []
         : _listofusers.where((Map<String, dynamic> user) {

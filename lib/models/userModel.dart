@@ -2,18 +2,14 @@ class MyUser {
   String uid;
   String name;
   String email;
-  String username;
-  String status;
-  int state;
   String profilePhoto;
+  String status;
 
   MyUser({
     this.uid,
     this.name,
     this.email,
-    this.username,
     this.status,
-    this.state,
     this.profilePhoto,
   });
 
@@ -22,9 +18,7 @@ class MyUser {
     data['uid'] = user.uid;
     data['fullname'] = user.name;
     data['email'] = user.email;
-    data['username'] = user.username;
     data['status'] = user.status;
-    data['state'] = user.state;
     data['profilePhoto'] = user.profilePhoto;
     return data;
   }
@@ -33,9 +27,7 @@ class MyUser {
     this.uid = mapData['uid'];
     this.name = mapData['fullname'];
     this.email = mapData['email'];
-    this.username = mapData['username'];
     this.status = mapData['status'];
-    this.state = mapData['state'];
     this.profilePhoto = mapData['profilePhoto'];
   }
 }

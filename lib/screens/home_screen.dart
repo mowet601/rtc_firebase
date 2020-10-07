@@ -2,8 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/userProvider.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
+import 'package:webrtc_test/utilityMan.dart';
 
 import 'chatlist_screen.dart';
 
@@ -20,12 +23,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
       userProvider = Provider.of<UserProvider>(context, listen: false);
-      userProvider.refreshUser();
+      await userProvider.refreshUser();
+      HiveStore.init(userProvider.getUser.uid);
     });
-
     pageController = PageController();
   }
 
@@ -33,33 +35,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return PickupLayout(
       scaffold: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: getUsernameBar(userProvider.getUser.name.split(' ')[0]),
+        ),
         body: PageView(
           children: [
             Container(child: ChatListScreen()),
             Center(child: Text('Call Logs')),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('My Account Info'),
-                  SizedBox(height: 16),
-                  FlatButton.icon(
-                    color: Colors.deepOrange,
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/');
-                    },
-                    icon: Icon(
-                      Icons.logout,
-                      color: Colors.white,
-                    ),
-                    label: Text(
-                      'LOGOUT',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  )
-                ],
-              ),
-            ),
+            Container(child: ProfilePage())
           ],
           controller: pageController,
           onPageChanged: onPageChanged,
@@ -91,6 +75,90 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget getUsernameBar(String name) {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        color: Colors.white,
+      ),
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: Text(name,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
+                    fontSize: 13)),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Container(
+              height: 13,
+              width: 13,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                // border: Border.all(width: 1, color: Colors.black),
+                color: Colors.green,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  // ignore: non_constant_identifier_names
+  Widget ProfilePage() {
+    TextStyle tsmain = TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Colors.blue,
+      fontSize: 18,
+    );
+    TextStyle tslite = TextStyle(
+      color: Colors.blueGrey[200],
+      fontSize: 10,
+      letterSpacing: 1.2,
+    );
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('My Account Info'),
+          SizedBox(height: 16),
+          CachedImage(
+            userProvider.getUser.profilePhoto,
+            height: 50,
+            width: 50,
+            radius: 20,
+          ),
+          SizedBox(height: 16),
+          Text('Full Name:', style: tslite),
+          Text(userProvider.getUser.name, style: tsmain),
+          SizedBox(height: 16),
+          Text('Email Address:', style: tslite),
+          Text(userProvider.getUser.email, style: tsmain),
+          SizedBox(height: 16),
+          Text('My Account Info', style: tslite),
+          Text(userProvider.getUser.uid, style: tsmain),
+          SizedBox(height: 32),
+          FlatButton.icon(
+            label: Text('LOGOUT', style: TextStyle(color: Colors.white)),
+            icon: Icon(Icons.logout, color: Colors.white),
+            color: Colors.deepOrange,
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString('myemail', '');
+              prefs.setString('mypassword', '');
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          )
+        ],
+      ),
+    );
+  }
+
   void navigationTapped(int page) {
     pageController.jumpToPage(page);
   }
@@ -100,33 +168,4 @@ class _HomeScreenState extends State<HomeScreen> {
       _page = page;
     });
   }
-
-  // void getListofFnf() async {
-  //   DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
-  //       .collection('users')
-  //       .doc('R5PxYM8QtrOZtbjhQTQ0')
-  //       .get();
-  //   var l = documentSnapshot.get('fnfs');
-  //   print(l);
-  //   print(l.runtimeType);
-  //   for (var i in l) {
-  //     setState(() {
-  //       _listofFnf.add(i.toString());
-  //     });
-  //   }
-  // }
-
-  // ListView getListviewofFnF() {
-  //   return ListView.builder(
-  //     shrinkWrap: true,
-  //     padding: EdgeInsets.all(8),
-  //     itemCount: _listofFnf.length,
-  //     itemBuilder: (context, index) {
-  //       return ListTile(
-  //         leading: Icon(Icons.face),
-  //         title: Text('${_listofFnf[index]}'),
-  //       );
-  //     },
-  //   );
-  // }
 }

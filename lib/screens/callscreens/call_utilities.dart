@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:webrtc_test/call_methods.dart';
 import 'package:webrtc_test/models/callModel.dart';
+import 'package:webrtc_test/models/hive_db.dart';
+import 'package:webrtc_test/models/logModel.dart';
 import 'package:webrtc_test/models/userModel.dart';
 import 'dart:math';
 
 import 'package:webrtc_test/screens/callscreens/call_screen.dart';
+import 'package:webrtc_test/string_constant.dart';
 
 class CallUtils {
   static final CallMethods callMethods = CallMethods();
@@ -24,11 +27,20 @@ class CallUtils {
           '-' +
           DateTime.now().millisecondsSinceEpoch.toRadixString(16),
     );
+    LogModel log = LogModel(
+      callerName: from.name,
+      callerPic: from.profilePhoto,
+      callStatus: CALL_STATUS_DIALLED,
+      receiverName: to.name,
+      receiverPic: to.profilePhoto,
+      timestamp: DateTime.now().toString(),
+    );
 
     bool callMade = await callMethods.makeCall(call: call);
     call.hasDialed = true;
 
     if (callMade) {
+      HiveStore.addLogs(log);
       Navigator.push(
         context,
         MaterialPageRoute(

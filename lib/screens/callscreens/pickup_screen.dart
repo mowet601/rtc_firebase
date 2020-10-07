@@ -3,19 +3,33 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:webrtc_test/call_methods.dart';
 import 'package:webrtc_test/models/callModel.dart';
+import 'package:webrtc_test/models/hive_db.dart';
+import 'package:webrtc_test/models/logModel.dart';
 import 'package:webrtc_test/screens/callscreens/call_utilities.dart';
+import 'package:webrtc_test/string_constant.dart';
 import 'package:webrtc_test/utilityMan.dart';
 
 import 'call_screen.dart';
 
-class PickupScreen extends StatelessWidget {
+class PickupScreen extends StatefulWidget {
   final CallModel call;
-  final CallMethods callMethods = CallMethods();
-  final AudioCache audioPlayer = AudioCache();
-
   PickupScreen({
     @required this.call,
   });
+  @override
+  _PickupScreenState createState() => _PickupScreenState();
+}
+
+class _PickupScreenState extends State<PickupScreen> {
+  final CallMethods callMethods = CallMethods();
+  final AudioCache audioPlayer = AudioCache();
+  bool isCallMissed = true;
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (isCallMissed) addLog2Hive(CALL_STATUS_MISSED);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +56,13 @@ class PickupScreen extends StatelessWidget {
               ),
               SizedBox(height: 50),
               Image.network(
-                call.callerPic,
+                widget.call.callerPic,
                 height: 150,
                 width: 150,
               ),
               SizedBox(height: 15),
               Text(
-                call.callerName,
+                widget.call.callerName,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -63,7 +77,9 @@ class PickupScreen extends StatelessWidget {
                     backgroundColor: Colors.redAccent,
                     elevation: 0,
                     onPressed: () async {
-                      await callMethods.endCall(call: call);
+                      isCallMissed = false;
+                      addLog2Hive(CALL_STATUS_RECEIVED);
+                      await callMethods.endCall(call: widget.call);
                       p.stop();
                       audioPlayer.clearCache();
                     },
@@ -73,13 +89,15 @@ class PickupScreen extends StatelessWidget {
                       child: Icon(Icons.call, color: Colors.white),
                       backgroundColor: Colors.green,
                       onPressed: () async {
+                        isCallMissed = false;
+                        addLog2Hive(CALL_STATUS_RECEIVED);
                         if (await MyPermissions
                             .isCameraAndMicPermissionsGranted()) {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      CallScreen(call: call)));
+                                      CallScreen(call: widget.call)));
                           p.stop();
                           audioPlayer.clearCache();
                         } else
@@ -94,5 +112,17 @@ class PickupScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  addLog2Hive(String callStatus) {
+    LogModel log = LogModel(
+      callerName: widget.call.callerName,
+      callerPic: widget.call.callerPic,
+      receiverName: widget.call.receiverName,
+      receiverPic: widget.call.receiverPic,
+      timestamp: DateTime.now().toString(),
+      callStatus: callStatus,
+    );
+    HiveStore.addLogs(log);
   }
 }

@@ -7,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:image/image.dart' as Im;
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 // import 'package:provider/provider.dart';
 
@@ -42,25 +43,12 @@ class Utils {
     return new File('$path/img_$random.jpg')
       ..writeAsBytesSync(Im.encodeJpg(image, quality: 85));
   }
+
+  static String formatDateString(String dateString) {
+    DateTime datetime = DateTime.parse(dateString);
+    return DateFormat('dd/MM/yy').format(datetime);
+  }
 }
-
-// class UniversalColors {
-//   static final Color lightBlueColor = Color(0xff0077d7);
-//   static final Color separatorColor = Color(0xff272c35);
-
-//   static final Color gradientStartColor = Colors.teal;
-//   static final Color gradientEndColor = Colors.blueAccent;
-
-//   static final Color senderColor = Color(0xff2b343b);
-//   static final Color receiverColor = Color(0xff1e2225);
-
-//   static final Gradient fabGradient = LinearGradient(
-//       colors: [gradientStartColor, gradientEndColor],
-//       begin: Alignment.topLeft,
-//       end: Alignment.bottomRight);
-// }
-
-enum ViewState { LOADING, IDLE }
 
 class CachedImage extends StatelessWidget {
   final String imageUrl;
@@ -103,17 +91,3 @@ class CachedImage extends StatelessWidget {
     }
   }
 }
-// class ImageUploadProvider with ChangeNotifier {
-//   ViewState _viewState = ViewState.IDLE;
-//   ViewState get getViewState => _viewState;
-
-//   void setToLoading() {
-//     _viewState = ViewState.LOADING;
-//     notifyListeners();
-//   }
-
-//   void setToidle() {
-//     _viewState = ViewState.IDLE;
-//     notifyListeners();
-//   }
-// }

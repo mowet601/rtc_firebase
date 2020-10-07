@@ -8,10 +8,10 @@ class UserProvider with ChangeNotifier {
   MyUser _user;
   final CollectionReference userCollection =
       FirebaseFirestore.instance.collection(USERS_COLLECTION);
-  //Firebase
 
   MyUser get getUser => _user;
-  void refreshUser() async {
+
+  Future<void> refreshUser() async {
     MyUser user = await getUserDetails();
     _user = user;
     notifyListeners();
