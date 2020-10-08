@@ -1,5 +1,3 @@
-import 'package:audioplayers/audio_cache.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:webrtc_test/call_methods.dart';
 import 'package:webrtc_test/models/callModel.dart';
@@ -22,7 +20,7 @@ class PickupScreen extends StatefulWidget {
 
 class _PickupScreenState extends State<PickupScreen> {
   final CallMethods callMethods = CallMethods();
-  final AudioCache audioPlayer = AudioCache();
+  // final AudioCache audioPlayer = AudioCache();
   bool isCallMissed = true;
 
   @override
@@ -33,10 +31,10 @@ class _PickupScreenState extends State<PickupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    AudioPlayer p;
-    audioPlayer
-        .loop('lib/assests/shootingstar.mp3', stayAwake: true)
-        .then((value) => p = value);
+    // AudioPlayer p;
+    // audioPlayer
+    //     .loop('lib/assets/shootingstar.mp3', stayAwake: true)
+    //     .then((value) => p = value);
     return WillPopScope(
       onWillPop: () async {
         Utils.makeToast(
@@ -52,20 +50,21 @@ class _PickupScreenState extends State<PickupScreen> {
             children: [
               Text(
                 'Incoming',
-                style: TextStyle(fontSize: 30),
+                style: TextStyle(fontSize: 30, color: Colors.grey),
               ),
               SizedBox(height: 50),
-              Image.network(
+              CachedImage(
                 widget.call.callerPic,
                 height: 150,
                 width: 150,
+                radius: 20,
               ),
               SizedBox(height: 15),
               Text(
                 widget.call.callerName,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    fontSize: 25,
                     color: Colors.blue),
               ),
               SizedBox(height: 75),
@@ -80,26 +79,32 @@ class _PickupScreenState extends State<PickupScreen> {
                       isCallMissed = false;
                       addLog2Hive(CALL_STATUS_RECEIVED);
                       await callMethods.endCall(call: widget.call);
-                      p.stop();
-                      audioPlayer.clearCache();
+                      // p.stop();
+                      // audioPlayer.clearCache();
                     },
                   ),
-                  SizedBox(width: 32),
+                  SizedBox(width: 64),
                   FloatingActionButton(
                       child: Icon(Icons.call, color: Colors.white),
                       backgroundColor: Colors.green,
                       onPressed: () async {
+                        print('onPickUp :: press accepted');
                         isCallMissed = false;
                         addLog2Hive(CALL_STATUS_RECEIVED);
+                        print('onPickUp :: added log to hive');
                         if (await MyPermissions
                             .isCameraAndMicPermissionsGranted()) {
+                          print('onPickUp :: permission granted');
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      CallScreen(call: widget.call)));
-                          p.stop();
-                          audioPlayer.clearCache();
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  CallScreen(call: widget.call),
+                            ),
+                          );
+                          print('onPickUp :: navigator pushed');
+                          // p.stop();
+                          // audioPlayer.clearCache();
                         } else
                           Utils.makeToast(
                               'Permissions not granted to pickup call',

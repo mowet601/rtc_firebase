@@ -41,6 +41,7 @@ class _LogListContainerState extends State<LogListContainer> {
                 itemBuilder: (c, i) {
                   LogModel log = logList[i];
                   bool hasdialled = log.callStatus == CALL_STATUS_DIALLED;
+                  // print('onLogScreen :: time: ' + log.timestamp);
                   return CustomTile(
                     leading: CachedImage(
                       hasdialled ? log.receiverPic : log.callerPic,
@@ -129,28 +130,30 @@ class _LogListContainerState extends State<LogListContainer> {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 25),
         child: Container(
-          color: Colors.blueGrey[200],
+          color: Colors.blueGrey,
           padding: EdgeInsets.symmetric(vertical: 35, horizontal: 25),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'This is where all your Call Logs are listed',
+                'This is where all your Call Logs will be listed',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: 25),
               Text(
-                'Calling your close family and friends all over the world with just one click',
+                'Make Calls to your close family and friends all over the world and the logs will appear here',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.normal,
                   fontSize: 20,
+                  color: Colors.white,
                 ),
               ),
             ],

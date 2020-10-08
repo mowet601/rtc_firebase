@@ -301,7 +301,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   getMessage(Message snapshot, bool isSenderMe) {
     // Utils.makeToast(snapshot.toString(), Colors.blue);
-    print(snapshot.toString());
+    // print(snapshot.toString());
     return snapshot.type != 'image'
         ? Text(
             snapshot.message,

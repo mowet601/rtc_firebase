@@ -29,7 +29,7 @@ class LogModel {
     return map;
   }
 
-  LogModel.fromMap(Map<String, dynamic> map) {
+  LogModel.fromMap(Map map) {
     this.logId = map['log_id'];
     this.callerName = map['caller_name'];
     this.callerPic = map['caller_pic'];

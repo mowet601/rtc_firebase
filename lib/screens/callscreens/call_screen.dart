@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:agora_rtc_engine/rtc_engine.dart';
 import 'package:agora_rtc_engine/rtc_local_view.dart' as RtcLocalView;
 import 'package:agora_rtc_engine/rtc_remote_view.dart' as RtcRemoteView;
@@ -38,13 +37,12 @@ class _CallScreenState extends State<CallScreen> {
     super.initState();
     runPostFrameCallback();
     initializeAgora();
+    print('onCall :: after init');
   }
 
   @override
   void dispose() {
-    // clear users
     _users.clear();
-    // destroy sdk
     _engine.leaveChannel();
     _engine.destroy();
     callStreamSubscription.cancel();
@@ -121,14 +119,17 @@ class _CallScreenState extends State<CallScreen> {
   runPostFrameCallback() {
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
       userProvider = Provider.of<UserProvider>(context, listen: false);
+      print('post');
       callStreamSubscription = callMethods
           .callStream(uid: userProvider.getUser.uid)
           .listen((DocumentSnapshot ds) {
         switch (ds.data()) {
           case null:
+            print('post null');
             Navigator.pop(context);
             break;
           default:
+            print('post default');
             break;
         }
       });
@@ -141,6 +142,7 @@ class _CallScreenState extends State<CallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('onCall :: build started');
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -153,41 +155,16 @@ class _CallScreenState extends State<CallScreen> {
         ),
       ),
     );
-    // body: Container(
-    //   alignment: Alignment.center,
-    //   child: Column(
-    //     mainAxisSize: MainAxisSize.min,
-    //     children: [
-    //       Text('Call has been made'),
-    //       SizedBox(height: 32),
-    //       MaterialButton(
-    //         color: Colors.red,
-    //         child: Icon(
-    //           Icons.call_end,
-    //           color: Colors.white,
-    //         ),
-    //         onPressed: () {
-    //           callMethods.endCall(call: widget.call);
-    //           Navigator.pop(context);
-    //         },
-    //       )
-    //     ],
-    //   ),
-    // ),
   }
 
   Widget _viewRows() {
     /// Helper function to get list of native views
     /// TODO: Use UIView instead of SurfaceView for iOS
     List<Widget> _getRenderViews() {
-      List<StatefulWidget> list = List<StatefulWidget>();
-      if (Platform.isAndroid) {
-        list.add(RtcLocalView.SurfaceView());
-        _users.forEach(
-            (int uid) => list.add(RtcRemoteView.SurfaceView(uid: uid)));
-      } else if (Platform.isIOS) {
-        print('ERROR :: iOS View NOT Implemented');
-      }
+      final List<StatefulWidget> list = [];
+      list.add(RtcLocalView.SurfaceView());
+      _users
+          .forEach((int uid) => list.add(RtcRemoteView.SurfaceView(uid: uid)));
       return list;
     }
 
@@ -205,24 +182,19 @@ class _CallScreenState extends State<CallScreen> {
     }
 
     final views = _getRenderViews();
+
     switch (views.length) {
       case 1:
         return Container(
-          child: Stack(
-            children: [
-              Column(children: <Widget>[
-                Text('Calling ' + widget.call.receiverName)
-              ]),
-              Column(children: <Widget>[_videoView(views[0])])
-            ],
-          ),
-        );
+            child: Column(
+          children: <Widget>[_videoView(views[0])],
+        ));
       case 2:
         return Container(
             child: Column(
           children: <Widget>[
+            _expandedVideoRow([views[1]]),
             _expandedVideoRow([views[0]]),
-            _expandedVideoRow([views[1]])
           ],
         ));
       case 3:
@@ -297,6 +269,7 @@ class _CallScreenState extends State<CallScreen> {
   }
 
   Widget _toolbar() {
+    print('onCall :: making toolbar');
     void _onToggleMute() {
       setState(() {
         muted = !muted;

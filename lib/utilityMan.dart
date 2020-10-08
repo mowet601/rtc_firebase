@@ -46,7 +46,7 @@ class Utils {
 
   static String formatDateString(String dateString) {
     DateTime datetime = DateTime.parse(dateString);
-    return DateFormat('dd/MM/yy').format(datetime);
+    return DateFormat('dd MMM yy, HH:MM a').format(datetime);
   }
 }
 

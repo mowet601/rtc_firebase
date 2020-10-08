@@ -31,7 +31,7 @@ class HiveStore {
     Box box = await Hive.openBox(boxname);
     List<LogModel> logList = [];
     for (int i = 0; i < box.length; i++) {
-      var logMap = box.getAt(i);
+      Map logMap = box.getAt(i);
       logList.add(LogModel.fromMap(logMap));
     }
     close();

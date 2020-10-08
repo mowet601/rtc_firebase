@@ -1,8 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webrtc_test/string_constant.dart';
 
 import '../utilityMan.dart';
@@ -123,9 +126,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void prefillForms() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String e = prefs.getString('myemail');
-    String p = prefs.getString('mypassword');
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    Directory dir = await getApplicationDocumentsDirectory();
+    Hive.init(dir.path);
+    Box b = await Hive.openBox('myprofile');
+    String e = b.get('myemail', defaultValue: '');
+    String p = b.get('mypassword', defaultValue: '');
+    Hive.close();
 
     setState(() {
       _emailController.text = e;
@@ -142,11 +149,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState.validate()) {
       String e = _emailController.text.toLowerCase().trim();
       String p = _passwordController.text.trim();
-      // Utils.makeToast('Logging in...\n$e\n$p', Colors.blue);
-
       CollectionReference usersCollec = _firestore.collection(USERS_COLLECTION);
       QuerySnapshot query =
           await usersCollec.where('email', isEqualTo: '$e').get();
+      // Utils.makeToast('Logging in...\n$e\n$p', Colors.blue);
 
       if (query.docs.length <= 0) {
         Utils.makeToast('No User under that Name', Colors.deepOrange);
@@ -163,10 +169,14 @@ class _LoginScreenState extends State<LoginScreen> {
         // );
       } else if (query.docs.length > 0) {
         if (query.docs.first.get('password') == p) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('myemail', e);
-          await prefs.setString('mypassword', p);
-          await prefs.setString('myuid', query.docs.first.get('uid'));
+          Box b = await Hive.openBox('myprofile');
+          b.put('myemail', e);
+          b.put('mypassword', p);
+          b.put('myuid', query.docs.first.get('uid'));
+          // SharedPreferences prefs = await SharedPreferences.getInstance();
+          // await prefs.setString('myemail', e);
+          // await prefs.setString('mypassword', p);
+          // await prefs.setString('myuid', query.docs.first.get('uid'));
 
           Utils.makeToast('Signed in Successfully', Colors.green);
           Navigator.pushReplacement(

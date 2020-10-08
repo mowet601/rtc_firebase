@@ -26,16 +26,16 @@ class ChatListScreen extends StatelessWidget {
               colors: [Colors.tealAccent, Colors.blueAccent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(40)),
+          borderRadius: BorderRadius.circular(50)),
       child: IconButton(
         icon: Icon(Icons.search),
         color: Colors.white,
-        iconSize: 25,
+        iconSize: 35,
         onPressed: () {
           Navigator.pushNamed(c, '/search');
         },
       ),
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.all(10),
     );
   }
 }
@@ -85,15 +85,15 @@ class ChatListContainer extends StatelessWidget {
       },
       title: Text(
         contact.fullname,
-        style: TextStyle(fontSize: 19),
+        style: TextStyle(fontSize: 19, color: Colors.blue),
       ),
       subtitle: Text(
         contact.email,
-        style: TextStyle(color: Colors.black38, fontSize: 14),
+        style: TextStyle(color: Colors.blueGrey, fontSize: 14),
       ),
       trailing: Text(
-        contact.uid,
-        style: TextStyle(color: Colors.grey, fontSize: 10),
+        contact.uid.substring(0, 5),
+        style: TextStyle(color: Colors.black26, fontSize: 12),
       ),
       leading: Container(
         constraints: BoxConstraints(maxHeight: 50, maxWidth: 50),
@@ -104,7 +104,7 @@ class ChatListContainer extends StatelessWidget {
               backgroundColor: Colors.grey,
               child: CachedImage(
                 contact.profilePhoto,
-                radius: 30,
+                radius: 50,
                 isRound: true,
               ),
             ),
@@ -140,18 +140,19 @@ class ChatListContainer extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 25),
         child: Container(
-          color: Colors.blueGrey[200],
+          color: Colors.blueGrey,
           padding: EdgeInsets.symmetric(vertical: 35, horizontal: 25),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'This is where all the Contacts are listed',
+                'This is where all your Contacts are listed',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: 25),
@@ -162,12 +163,15 @@ class ChatListContainer extends StatelessWidget {
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.normal,
                   fontSize: 20,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: 25),
               Text(
-                'Tap the round floating Search button start',
-                // style: TextStyle(color: Colors.grey),
+                'Tap the round floating Search button to start',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
               )
             ],
           ),

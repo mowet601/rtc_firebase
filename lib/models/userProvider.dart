@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
 import 'package:webrtc_test/models/userModel.dart';
 import 'package:webrtc_test/string_constant.dart';
 
@@ -18,10 +18,11 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<MyUser> getUserDetails() async {
-    String myuid = '';
-    var prefs = await SharedPreferences.getInstance();
+    Box b = await Hive.openBox('myprofile');
+    String myuid = b.get('myuid', defaultValue: '');
+    // var prefs = await SharedPreferences.getInstance();
+    // myuid = prefs.getString('myuid');
     print('UserProvider :: getuserdetails myuid:' + myuid);
-    myuid = prefs.getString('myuid');
     DocumentSnapshot ds = await userCollection.doc(myuid).get();
     return MyUser.fromMap(ds.data());
   }

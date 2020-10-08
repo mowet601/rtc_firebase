@@ -17,7 +17,7 @@ class ContactModel {
 
   Map<String, dynamic> toMap() {
     var data = Map<String, dynamic>();
-    data['contact_uid'] = this.uid;
+    data['uid'] = this.uid;
     data['fullname'] = this.fullname;
     data['email'] = this.email;
     data['profilePhoto'] = this.profilePhoto;
@@ -26,7 +26,7 @@ class ContactModel {
   }
 
   ContactModel.fromMap(Map<String, dynamic> map) {
-    this.uid = map['contact_uid'];
+    this.uid = map['uid'];
     this.fullname = map['fullname'];
     this.email = map['email'];
     this.profilePhoto = map['profilePhoto'];
