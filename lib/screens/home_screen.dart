@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/userProvider.dart';
 import 'package:webrtc_test/screens/callscreens/log_screen.dart';
@@ -158,8 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.deepOrange,
             onPressed: () async {
               Box b = await Hive.openBox('myprofile');
-              // b..setString('myemail', '');
-              // prefs.setString('mypassword', '');
               b.put('myemail', '');
               b.put('mypassword', '');
               b.put('myuid', '');

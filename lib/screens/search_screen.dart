@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webrtc_test/models/contactModel.dart';
 import 'package:webrtc_test/models/userModel.dart';
 import 'package:webrtc_test/models/userProvider.dart';
@@ -191,8 +191,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   getListofUsers() async {
     QuerySnapshot q = await _firestore.collection(USERS_COLLECTION).get();
-    SharedPreferences p = await SharedPreferences.getInstance();
-    String e = p.getString('myemail');
+    Box box = await Hive.openBox('myprofile');
+    String e = box.get('myemail');
     print('search-getlistusers myemail: ' + e);
     q.docs.forEach((element) {
       print(element.data());

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webrtc_test/string_constant.dart';
 
 import '../utilityMan.dart';
@@ -126,7 +125,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void prefillForms() async {
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
     Directory dir = await getApplicationDocumentsDirectory();
     Hive.init(dir.path);
     Box b = await Hive.openBox('myprofile');
@@ -158,10 +156,6 @@ class _LoginScreenState extends State<LoginScreen> {
         Utils.makeToast('No User under that Name', Colors.deepOrange);
         // DocumentReference newdoc =
         //     await usersCollec.add({'email': e, 'password': p});
-        // SharedPreferences prefs = await SharedPreferences.getInstance();
-        // await prefs.setString('myemail', e);
-        // await prefs.setString('mypassword', p);
-        // await prefs.setString('myfirebaseid', newdoc.id);
 
         // Navigator.pushReplacement(
         //   context,
@@ -173,10 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
           b.put('myemail', e);
           b.put('mypassword', p);
           b.put('myuid', query.docs.first.get('uid'));
-          // SharedPreferences prefs = await SharedPreferences.getInstance();
-          // await prefs.setString('myemail', e);
-          // await prefs.setString('mypassword', p);
-          // await prefs.setString('myuid', query.docs.first.get('uid'));
 
           Utils.makeToast('Signed in Successfully', Colors.green);
           Navigator.pushReplacement(

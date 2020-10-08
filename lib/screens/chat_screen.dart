@@ -4,8 +4,8 @@ import 'package:emoji_picker/emoji_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webrtc_test/models/messageModel.dart';
 import 'package:webrtc_test/models/userModel.dart';
 import 'package:webrtc_test/screens/callscreens/call_utilities.dart';
@@ -33,7 +33,6 @@ class _ChatScreenState extends State<ChatScreen> {
   MyUser _receiverUser;
   Map<String, dynamic> _sender;
   String _currentUserId;
-  SharedPreferences prefs;
   FirebaseFirestore _firestore;
   StorageReference _storageRef;
   bool isImageLoading = false;
@@ -45,9 +44,8 @@ class _ChatScreenState extends State<ChatScreen> {
     _firestore = FirebaseFirestore.instance;
     _receiverUser = MyUser.fromMap(widget.receiver);
     print(_receiverUser);
-    SharedPreferences.getInstance().then((p) {
-      prefs = p;
-      _currentUserId = prefs.getString('myuid');
+    Hive.openBox('myprofile').then((b) {
+      _currentUserId = b.get('myuid');
       _firestore
           .collection(USERS_COLLECTION)
           .doc('$_currentUserId')

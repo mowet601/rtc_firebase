@@ -20,8 +20,6 @@ class UserProvider with ChangeNotifier {
   Future<MyUser> getUserDetails() async {
     Box b = await Hive.openBox('myprofile');
     String myuid = b.get('myuid', defaultValue: '');
-    // var prefs = await SharedPreferences.getInstance();
-    // myuid = prefs.getString('myuid');
     print('UserProvider :: getuserdetails myuid:' + myuid);
     DocumentSnapshot ds = await userCollection.doc(myuid).get();
     return MyUser.fromMap(ds.data());
