@@ -72,7 +72,8 @@ class _ChatScreenState extends State<ChatScreen> {
           title: Text(_receiverUser.name),
           actions: [
             IconButton(
-              padding: EdgeInsets.only(right: 16),
+              padding: EdgeInsets.only(right: 32),
+              iconSize: 30,
               icon: Icon(Icons.videocam),
               onPressed: () async =>
                   await MyPermissions.isCameraAndMicPermissionsGranted()
@@ -83,21 +84,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       : Utils.makeToast('Permissions not granted to make call',
                           Colors.deepOrange),
             ),
-            // IconButton(
-            //   icon: Icon(Icons.phone),
-            //   onPressed: () {},
-            // ),
           ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.videocam),
+          backgroundColor: Colors.orangeAccent,
+          onPressed: () async =>
+              await MyPermissions.isCameraAndMicPermissionsGranted()
+                  ? CallUtils.dial(
+                      from: _senderUser, to: _receiverUser, context: context)
+                  : Utils.makeToast('Permissions not granted to make call',
+                      Colors.deepOrange),
         ),
         body: Column(
           children: [
-            // RaisedButton(
-            //     child: Text('Change ViewState'),
-            //     onPressed: () {
-            //       _imageUploadProvider.getViewState == ViewState.LOADING
-            //           ? _imageUploadProvider.setToidle()
-            //           : _imageUploadProvider.setToLoading();
-            //     }),
             Flexible(child: getMessageList()),
             isImageLoading
                 ? Container(

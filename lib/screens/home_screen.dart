@@ -7,9 +7,8 @@ import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/userProvider.dart';
 import 'package:webrtc_test/screens/callscreens/log_screen.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
+import 'package:webrtc_test/screens/contactlist_screen.dart';
 import 'package:webrtc_test/utilityMan.dart';
-
-import 'chatlist_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -50,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         body: PageView(
           children: [
-            Container(child: ChatListScreen()),
+            Container(child: ContactListScreen()),
             Container(child: LogScreen()),
             Container(
                 child:

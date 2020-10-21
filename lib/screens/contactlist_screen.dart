@@ -9,7 +9,7 @@ import 'package:webrtc_test/utilityMan.dart';
 
 import 'custom_tile.dart';
 
-class ChatListScreen extends StatelessWidget {
+class ContactListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final UserProvider userProvider = Provider.of<UserProvider>(context);

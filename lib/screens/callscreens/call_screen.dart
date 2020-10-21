@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock/wakelock.dart';
 import 'package:webrtc_test/call_methods.dart';
 import 'package:webrtc_test/models/agoraConfig.dart';
 import 'package:webrtc_test/models/callModel.dart';
@@ -37,6 +38,7 @@ class _CallScreenState extends State<CallScreen> {
     super.initState();
     runPostFrameCallback();
     initializeAgora();
+    Wakelock.enable();
     print('onCall :: after init');
   }
 
@@ -46,6 +48,7 @@ class _CallScreenState extends State<CallScreen> {
     _engine.leaveChannel();
     _engine.destroy();
     callStreamSubscription.cancel();
+    Wakelock.disable();
     super.dispose();
   }
 
@@ -149,7 +152,7 @@ class _CallScreenState extends State<CallScreen> {
         child: Stack(
           children: <Widget>[
             _viewRows(),
-            _panel(),
+            // _panel(),
             _toolbar(),
           ],
         ),
@@ -218,7 +221,7 @@ class _CallScreenState extends State<CallScreen> {
     return Container();
   }
 
-  // TODO: Debug Info panel to show Logs - remove in production
+  // ignore: unused_element
   Widget _panel() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 48),

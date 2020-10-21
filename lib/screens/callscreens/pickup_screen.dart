@@ -1,3 +1,4 @@
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:webrtc_test/call_methods.dart';
 import 'package:webrtc_test/models/callModel.dart';
@@ -20,12 +21,14 @@ class PickupScreen extends StatefulWidget {
 
 class _PickupScreenState extends State<PickupScreen> {
   final CallMethods callMethods = CallMethods();
-  // final AudioCache audioPlayer = AudioCache();
   bool isCallMissed = true;
+  AssetsAudioPlayer audioplayer = AssetsAudioPlayer.newPlayer();
 
   @override
   void dispose() {
     super.dispose();
+    audioplayer.stop();
+    audioplayer.dispose();
     if (isCallMissed) addLog2Hive(CALL_STATUS_MISSED);
   }
 
@@ -35,6 +38,12 @@ class _PickupScreenState extends State<PickupScreen> {
     // audioPlayer
     //     .loop('lib/assets/shootingstar.mp3', stayAwake: true)
     //     .then((value) => p = value);
+    audioplayer.open(
+      Audio("lib/assets/shootingstar.mp3"),
+      autoStart: true,
+      showNotification: true,
+      loopMode: LoopMode.single,
+    );
     return WillPopScope(
       onWillPop: () async {
         Utils.makeToast(
@@ -88,13 +97,10 @@ class _PickupScreenState extends State<PickupScreen> {
                       child: Icon(Icons.call, color: Colors.white),
                       backgroundColor: Colors.green,
                       onPressed: () async {
-                        print('onPickUp :: press accepted');
                         isCallMissed = false;
                         addLog2Hive(CALL_STATUS_RECEIVED);
-                        print('onPickUp :: added log to hive');
                         if (await MyPermissions
                             .isCameraAndMicPermissionsGranted()) {
-                          print('onPickUp :: permission granted');
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -102,7 +108,6 @@ class _PickupScreenState extends State<PickupScreen> {
                                   CallScreen(call: widget.call),
                             ),
                           );
-                          print('onPickUp :: navigator pushed');
                           // p.stop();
                           // audioPlayer.clearCache();
                         } else
