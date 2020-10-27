@@ -47,6 +47,7 @@ class ChatListContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // print('BUILD: chatlist container');
     return Container(
       child: StreamBuilder<QuerySnapshot>(
           stream: fetchContacts(myUserId),
@@ -85,7 +86,8 @@ class ChatListContainer extends StatelessWidget {
       },
       title: Text(
         contact.fullname,
-        style: TextStyle(fontSize: 19, color: Colors.blue),
+        style: TextStyle(
+            fontSize: 20, color: Colors.blue, fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
         contact.email,

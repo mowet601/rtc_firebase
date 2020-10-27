@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wakelock/wakelock.dart';
 import 'package:webrtc_test/models/messageModel.dart';
 import 'package:webrtc_test/models/userModel.dart';
 import 'package:webrtc_test/screens/callscreens/call_utilities.dart';
@@ -62,6 +63,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     // _imageUploadProvider = Provider.of<ImageUploadProvider>(context);
+    Wakelock.enabled.then((value) => print('onChat: build wakelock is $value'));
     return PickupLayout(
       scaffold: Scaffold(
         appBar: AppBar(
@@ -70,25 +72,30 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(_receiverUser.name),
-          actions: [
-            IconButton(
-              padding: EdgeInsets.only(right: 32),
-              iconSize: 30,
-              icon: Icon(Icons.videocam),
-              onPressed: () async =>
-                  await MyPermissions.isCameraAndMicPermissionsGranted()
-                      ? CallUtils.dial(
-                          from: _senderUser,
-                          to: _receiverUser,
-                          context: context)
-                      : Utils.makeToast('Permissions not granted to make call',
-                          Colors.deepOrange),
-            ),
-          ],
+          // actions: [
+          //   IconButton(
+          //     padding: EdgeInsets.only(right: 32),
+          //     iconSize: 30,
+          //     icon: Icon(Icons.videocam),
+          //     onPressed: () async =>
+          //         await MyPermissions.isCameraAndMicPermissionsGranted()
+          //             ? CallUtils.dial(
+          //                 from: _senderUser,
+          //                 to: _receiverUser,
+          //                 context: context)
+          //             : Utils.makeToast('Permissions not granted to make call',
+          //                 Colors.deepOrange),
+          //   ),
+          // ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
         floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.videocam),
+          child: Stack(children: [
+            Icon(
+              Icons.videocam,
+              size: 32,
+            ),
+          ]),
           backgroundColor: Colors.orangeAccent,
           onPressed: () async =>
               await MyPermissions.isCameraAndMicPermissionsGranted()
@@ -143,10 +150,11 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Container(
-      padding: EdgeInsets.all(10),
+      color: Colors.blue,
+      padding: EdgeInsets.all(16),
       child: Row(
         children: [
-          SizedBox(width: 5),
+          // SizedBox(width: 5),
           Expanded(
             child: Stack(
               alignment: Alignment.centerRight,
@@ -155,13 +163,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   controller: _textFieldController,
                   focusNode: _textfieldFocus,
                   onTap: () => hideEmojiCon(),
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.black),
                   onChanged: (val) => (val.length > 0 && val.trim() != '')
                       ? setWritingTo(true)
                       : setWritingTo(false),
                   decoration: InputDecoration(
                     hintText: 'Type your message',
-                    hintStyle: TextStyle(color: Colors.white38),
+                    hintStyle: TextStyle(color: Colors.black38),
                     border: OutlineInputBorder(
                       borderRadius:
                           const BorderRadius.all(const Radius.circular(50)),
@@ -170,13 +178,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                     filled: true,
-                    fillColor: Colors.blueGrey,
+                    fillColor: Colors.white,
                   ),
                 ),
                 IconButton(
                   icon: Icon(
                     Icons.insert_emoticon,
-                    color: Colors.white,
+                    color: Colors.blue,
                   ),
                   onPressed: () {
                     if (!showEmojipicker) {
@@ -191,36 +199,38 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
           ),
-          SizedBox(width: 10),
-          isWriting
-              ? Container()
-              : GestureDetector(
-                  onTap: () => pickImage(ImageSource.gallery),
-                  child: Icon(Icons.photo),
-                ),
-          SizedBox(width: 10),
-          isWriting
-              ? Container()
-              : GestureDetector(
-                  onTap: () => pickImage(ImageSource.camera),
-                  child: Icon(Icons.camera_alt),
-                ),
+          // SizedBox(width: 10),
+          // isWriting
+          //     ? Container()
+          //     : GestureDetector(
+          //         onTap: () => pickImage(ImageSource.gallery),
+          //         child: Icon(Icons.photo, color: Colors.white),
+          //       ),
+          // SizedBox(width: 10),
+          // isWriting
+          //     ? Container()
+          //     : GestureDetector(
+          //         onTap: () => pickImage(ImageSource.camera),
+          //         child: Icon(Icons.camera_alt, color: Colors.white),
+          //       ),
           isWriting
               ? Container(
                   margin: EdgeInsets.only(left: 10),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [Colors.tealAccent, Colors.blueAccent],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight),
+                    color: Colors.white,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.send, size: 15),
+                    icon: Icon(
+                      Icons.send,
+                      size: 24,
+                      color: Colors.blue,
+                    ),
                     onPressed: () => sendMessage(),
                   ),
                 )
-              : Container()
+              : Container(),
+          // SizedBox(width: 10),
         ],
       ),
     );
@@ -301,6 +311,7 @@ class _ChatScreenState extends State<ChatScreen> {
   getMessage(Message snapshot, bool isSenderMe) {
     // Utils.makeToast(snapshot.toString(), Colors.blue);
     // print(snapshot.toString());
+    // print('onGetMessage: ${snapshot.type}');
     return snapshot.type != 'image'
         ? Text(
             snapshot.message,

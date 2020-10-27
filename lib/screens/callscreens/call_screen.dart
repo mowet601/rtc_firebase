@@ -39,7 +39,10 @@ class _CallScreenState extends State<CallScreen> {
     runPostFrameCallback();
     initializeAgora();
     Wakelock.enable();
-    print('onCall :: after init');
+    Wakelock.enabled.then((value) {
+      print('onCall: init wakelock state: $value');
+    });
+    // print('onCall :: after init');
   }
 
   @override
@@ -49,6 +52,9 @@ class _CallScreenState extends State<CallScreen> {
     _engine.destroy();
     callStreamSubscription.cancel();
     Wakelock.disable();
+    Wakelock.enabled.then((value) {
+      print('onCall: post-dispose wakelock state: $value');
+    });
     super.dispose();
   }
 
@@ -145,7 +151,7 @@ class _CallScreenState extends State<CallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('onCall :: build started');
+    // print('onCall :: build started');
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -190,7 +196,19 @@ class _CallScreenState extends State<CallScreen> {
       case 1:
         return Container(
             child: Column(
-          children: <Widget>[_videoView(views[0])],
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            SizedBox(height: 48),
+            Text(
+              'Calling...',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20),
+            ),
+            SizedBox(height: 16),
+            _videoView(views[0]),
+          ],
         ));
       case 2:
         return Container(
@@ -272,7 +290,7 @@ class _CallScreenState extends State<CallScreen> {
   }
 
   Widget _toolbar() {
-    print('onCall :: making toolbar');
+    // print('onCall :: making toolbar');
     void _onToggleMute() {
       setState(() {
         muted = !muted;

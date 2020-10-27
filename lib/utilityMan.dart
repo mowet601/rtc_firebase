@@ -12,10 +12,6 @@ import 'package:path_provider/path_provider.dart';
 // import 'package:provider/provider.dart';
 
 class Utils {
-  static String getUsername(String email) {
-    return 'stelvid:${email.split('@')[0]}';
-  }
-
   static void makeToast(String messageStr, Color color) {
     Fluttertoast.showToast(
         msg: messageStr,

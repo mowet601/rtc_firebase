@@ -52,7 +52,7 @@ class _LogListContainerState extends State<LogListContainer> {
                     title: Text(
                       hasdialled ? log.receiverName : log.callerName,
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                        // fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
                     ),
@@ -95,7 +95,7 @@ class _LogListContainerState extends State<LogListContainer> {
 
   Widget buildCallStatusIcon(String callstatus) {
     Icon icon;
-    double iconSize = 15;
+    double iconSize = 20;
     switch (callstatus) {
       case CALL_STATUS_DIALLED:
         icon = Icon(

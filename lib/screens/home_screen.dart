@@ -1,11 +1,13 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/userProvider.dart';
-import 'package:webrtc_test/screens/callscreens/log_screen.dart';
+import 'package:webrtc_test/screens/log_screen.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 import 'package:webrtc_test/screens/contactlist_screen.dart';
 import 'package:webrtc_test/utilityMan.dart';
@@ -20,14 +22,22 @@ class _HomeScreenState extends State<HomeScreen> {
   int _page = 0;
   UserProvider userProvider;
   bool userLoading;
+  final FirebaseMessaging fcm = FirebaseMessaging();
 
   @override
   void initState() {
     super.initState();
     userProvider = Provider.of<UserProvider>(context, listen: false);
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
-      userProvider.refreshUser().then((value) {
+      userProvider.refreshUser().then((_) {
         HiveStore.init(userProvider.getUser.uid);
+        if (Platform.isIOS) {
+          fcm.onIosSettingsRegistered
+              .listen((event) => registerFCM(userProvider.getUser.uid));
+          fcm.requestNotificationPermissions(IosNotificationSettings());
+        } else
+          registerFCM(userProvider.getUser.uid);
+        notifCallbackFCM();
         if (userLoading)
           setState(() {
             userLoading = false;
@@ -69,15 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(
                 Icons.chat,
               ),
-              title: Text('Chat'),
+              label: 'Chat',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.call),
-              title: Text('Call'),
+              label: 'Call',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
-              title: Text('Info'),
+              label: 'Info',
             ),
           ],
         ),
@@ -127,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Center(
       child: Column(
         children: [
-          SizedBox(height: 32),
+          SizedBox(height: 40),
           Text(
             'My Account Info',
             style: tslite,
@@ -150,7 +160,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(userProvider.getUser.uid, style: tsmain),
           SizedBox(height: 32),
           FlatButton.icon(
-            label: Text('LOGOUT',
+            // padding: EdgeInsets.all(15),
+            label: Text('Log Out',
                 style: TextStyle(color: Colors.white, fontSize: 18)),
             icon: Icon(Icons.logout, color: Colors.white),
             color: Colors.deepOrange,
@@ -175,5 +186,38 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _page = page;
     });
+  }
+
+  void notifCallbackFCM() {
+    fcm.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print('on msg $message');
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print('on resume $message');
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print('on launch $message');
+      },
+    );
+  }
+
+  registerFCM(String uid) async {
+    fcm.subscribeToTopic('all');
+    String fcmtoken = await fcm.getToken();
+    if (fcmtoken != null) {
+      print(fcmtoken);
+      DocumentReference doc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('fcmtokens')
+          .doc(fcmtoken);
+      await doc.set({
+        'token': fcmtoken,
+        'createdAt': FieldValue.serverTimestamp(),
+        'platform': Platform.operatingSystem
+      });
+      Utils.makeToast('Notifications Activated', Colors.green);
+    }
   }
 }
