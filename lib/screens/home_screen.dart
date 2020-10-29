@@ -192,12 +192,15 @@ class _HomeScreenState extends State<HomeScreen> {
     fcm.configure(
       onMessage: (Map<String, dynamic> message) async {
         print('on msg $message');
+        Utils.makeToast('onMessage: $message', Colors.green);
       },
       onResume: (Map<String, dynamic> message) async {
         print('on resume $message');
+        Utils.makeToast('onResume: $message', Colors.green);
       },
       onLaunch: (Map<String, dynamic> message) async {
         print('on launch $message');
+        Utils.makeToast('onLaunch: $message', Colors.green);
       },
     );
   }
@@ -207,13 +210,10 @@ class _HomeScreenState extends State<HomeScreen> {
     String fcmtoken = await fcm.getToken();
     if (fcmtoken != null) {
       print(fcmtoken);
-      DocumentReference doc = FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('fcmtokens')
-          .doc(fcmtoken);
+      DocumentReference doc =
+          FirebaseFirestore.instance.collection('users').doc(uid);
       await doc.set({
-        'token': fcmtoken,
+        'fcmtoken': fcmtoken,
         'createdAt': FieldValue.serverTimestamp(),
         'platform': Platform.operatingSystem
       });

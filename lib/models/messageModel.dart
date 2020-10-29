@@ -29,7 +29,7 @@ class Message {
     var map = Map<String, dynamic>();
     map['senderId'] = this.senderId;
     map['receiverId'] = this.receiverId;
-    map['tpye'] = this.type;
+    map['type'] = this.type;
     map['message'] = this.message;
     map['timestamp'] = this.timestamp;
     return map;
@@ -39,7 +39,7 @@ class Message {
     var map = Map<String, dynamic>();
     map['senderId'] = this.senderId;
     map['receiverId'] = this.receiverId;
-    map['tpye'] = this.type;
+    map['type'] = this.type;
     map['message'] = this.message;
     map['timestamp'] = this.timestamp;
     map['photoUrl'] = this.photoUrl;

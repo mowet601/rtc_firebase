@@ -3,6 +3,8 @@ class MyUser {
   String name;
   String email;
   String profilePhoto;
+  String fcmtoken;
+  bool type; // TRUE -> SENIOR RESIDENT
   String status;
 
   MyUser({
@@ -10,6 +12,8 @@ class MyUser {
     this.name,
     this.email,
     this.status,
+    this.fcmtoken,
+    this.type,
     this.profilePhoto,
   });
 
@@ -18,8 +22,10 @@ class MyUser {
     data['uid'] = user.uid;
     data['fullname'] = user.name;
     data['email'] = user.email;
-    data['status'] = user.status;
     data['profilePhoto'] = user.profilePhoto;
+    data['status'] = user.status;
+    data['type'] = user.type;
+    data['fcmtoken'] = user.fcmtoken;
     return data;
   }
 
@@ -27,21 +33,9 @@ class MyUser {
     this.uid = mapData['uid'];
     this.name = mapData['fullname'];
     this.email = mapData['email'];
-    this.status = mapData['status'];
     this.profilePhoto = mapData['profilePhoto'];
+    this.status = mapData['status'];
+    this.type = mapData['type'];
+    this.fcmtoken = mapData['fcmtoken'];
   }
-}
-
-class MyUserSingleton {
-  // singleton
-  static final MyUserSingleton _singleton = MyUserSingleton._internal();
-  factory MyUserSingleton() => _singleton;
-  MyUserSingleton._internal();
-  static MyUserSingleton get info => _singleton;
-
-  String pid = 'Hubert';
-  String room = 'P07A';
-  String deviceName;
-  String deviceId;
-  // String modelName;
 }

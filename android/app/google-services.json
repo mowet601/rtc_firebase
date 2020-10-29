@@ -1,80 +1,50 @@
 {
   "project_info": {
-    "project_number": "762463370262",
-    "firebase_url": "https://stellar-videocalls-agedcare.firebaseio.com",
-    "project_id": "stellar-videocalls-agedcare",
-    "storage_bucket": "stellar-videocalls-agedcare.appspot.com"
+    "project_number": "501738384004",
+    "firebase_url": "https://agedcare-uvue-videochat.firebaseio.com",
+    "project_id": "agedcare-uvue-videochat",
+    "storage_bucket": "agedcare-uvue-videochat.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:762463370262:android:733c4e789feba39aea8937",
+        "mobilesdk_app_id": "1:501738384004:android:5b542084b8c7c396a3f0d1",
         "android_client_info": {
-          "package_name": "com.example.ac_videocall"
+          "package_name": "com.stellarvision.uvuevideochat"
         }
       },
       "oauth_client": [
         {
-          "client_id": "762463370262-dmj0iktebd2j5n62jurbtn3nki5au135.apps.googleusercontent.com",
+          "client_id": "501738384004-368tsrbblf6tppp6jhoo7pthpjph0scf.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.ac_videocall",
+            "package_name": "com.stellarvision.uvuevideochat",
             "certificate_hash": "0e9d57cc497ca6cc50274e8b6d7ea7aeb741e50e"
           }
         },
         {
-          "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
+          "client_id": "501738384004-1vm6fh0qt26iohf9243q005ah57kd4nt.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCbZJ3Q0ZDhCLdpBwaSYiBEbSjRk5LocU4"
+          "current_key": "AIzaSyDQ9aSVtbvRIDxxRQzzjGrMvxhsq23GJrY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
+              "client_id": "501738384004-1vm6fh0qt26iohf9243q005ah57kd4nt.apps.googleusercontent.com",
               "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:762463370262:android:7820fea6567e551cea8937",
-        "android_client_info": {
-          "package_name": "com.example.webrtc_test"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "762463370262-0rkkjpj940cpdjt6or8rnqmppf1bd944.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.webrtc_test",
-            "certificate_hash": "0e9d57cc497ca6cc50274e8b6d7ea7aeb741e50e"
-          }
-        },
-        {
-          "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCbZJ3Q0ZDhCLdpBwaSYiBEbSjRk5LocU4"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
+            },
             {
-              "client_id": "762463370262-8ig7q6o4p2aj26ec26a65spml3bd21ie.apps.googleusercontent.com",
-              "client_type": 3
+              "client_id": "501738384004-d4mn1athsm6dnej3jbeo6hfbbbl9ip7v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.stellarvision.uvuevideochat"
+              }
             }
           ]
         }

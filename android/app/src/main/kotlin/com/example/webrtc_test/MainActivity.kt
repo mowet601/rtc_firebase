@@ -1,4 +1,4 @@
-package com.example.webrtc_test
+package com.stellarvision.uvuevideochat
 
 import io.flutter.embedding.android.FlutterActivity
 
