@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
     c = context;
     return Container(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8),
         child: profileForm(),
       ),
     );
@@ -53,74 +53,76 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget profileForm() {
     return Form(
       key: _formKey,
-      child: Column(
-        children: <Widget>[
-          TextFormField(
-            controller: _emailController,
-            validator: (value) {
-              value = value.trim();
-              if (value.isEmpty) {
-                return 'Please enter some text';
-              } else if (!EmailValidator.validate(value)) {
-                return 'Not a valid email address';
-              }
-              return null;
-            },
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'Enter your email address',
-              // suffixIcon: Icon(
-              //   Icons.mail,
-              //   color: Theme.of(context).primaryColor,
-              // ),
-            ),
-          ),
-          SizedBox(height: 8),
-          TextFormField(
-            controller: _passwordController,
-            validator: (value) {
-              if (value.isEmpty)
-                return 'Please enter your password';
-              else if (value.length < 6)
-                return 'The pasword must be at least 6 (six) characters long';
-              return null;
-            },
-            obscureText: !_passwordVisible,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              hintText: 'Enter your password',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  !_passwordVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Theme.of(context).primaryColor,
+      child: _isLoggingIn
+          ? CircularProgressIndicator()
+          : Column(
+              children: <Widget>[
+                TextFormField(
+                  controller: _emailController,
+                  validator: (value) {
+                    value = value.trim();
+                    if (value.isEmpty) {
+                      return 'Please enter some text';
+                    } else if (!EmailValidator.validate(value)) {
+                      return 'Not a valid email address';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'Enter your email address',
+                    // suffixIcon: Icon(
+                    //   Icons.mail,
+                    //   color: Theme.of(context).primaryColor,
+                    // ),
+                  ),
                 ),
-                onPressed: () {
-                  setState(() {
-                    _passwordVisible = !_passwordVisible;
-                  });
-                },
-              ),
+                SizedBox(height: 8),
+                TextFormField(
+                  controller: _passwordController,
+                  validator: (value) {
+                    if (value.isEmpty)
+                      return 'Please enter your password';
+                    else if (value.length < 6)
+                      return 'The pasword must be at least 6 (six) characters long';
+                    return null;
+                  },
+                  obscureText: !_passwordVisible,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: 'Enter your password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        !_passwordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                FlatButton(
+                  color: Colors.blue,
+                  padding: EdgeInsets.all(16),
+                  onPressed: () {
+                    performLogin(context);
+                  },
+                  child: Text(
+                    'Sign In',
+                    style: TextStyle(
+                        fontSize: 16,
+                        // fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                ),
+              ],
             ),
-          ),
-          SizedBox(height: 32),
-          FlatButton(
-            color: Colors.blue,
-            padding: EdgeInsets.all(16),
-            onPressed: () {
-              performLogin(context);
-            },
-            child: Text(
-              'Sign In',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-          ),
-          SizedBox(height: 16),
-          _isLoggingIn ? CircularProgressIndicator() : SizedBox(height: 32),
-        ],
-      ),
     );
   }
 
@@ -150,24 +152,15 @@ class _LoginScreenState extends State<LoginScreen> {
       CollectionReference usersCollec = _firestore.collection(USERS_COLLECTION);
       QuerySnapshot query =
           await usersCollec.where('email', isEqualTo: '$e').get();
-      // Utils.makeToast('Logging in...\n$e\n$p', Colors.blue);
 
       if (query.docs.length <= 0) {
         Utils.makeToast('No User under that Name', Colors.deepOrange);
-        // DocumentReference newdoc =
-        //     await usersCollec.add({'email': e, 'password': p});
-
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => HomeScreen()),
-        // );
       } else if (query.docs.length > 0) {
         if (query.docs.first.get('password') == p) {
           Box b = await Hive.openBox('myprofile');
           b.put('myemail', e);
           b.put('mypassword', p);
           b.put('myuid', query.docs.first.get('uid'));
-
           Utils.makeToast('Signed in Successfully', Colors.green);
           Navigator.pushReplacement(
             context,

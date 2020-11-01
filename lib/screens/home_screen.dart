@@ -79,15 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(
                 Icons.chat,
               ),
-              label: 'Chat',
+              label: 'Contacts',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.call),
-              label: 'Call',
+              label: 'Call Logs',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
-              label: 'Info',
+              label: 'My Info',
             ),
           ],
         ),
@@ -127,11 +127,11 @@ class _HomeScreenState extends State<HomeScreen> {
     TextStyle tsmain = TextStyle(
       fontWeight: FontWeight.bold,
       color: Colors.blue,
-      fontSize: 22,
+      fontSize: 16,
     );
     TextStyle tslite = TextStyle(
       color: Colors.blueGrey,
-      fontSize: 16,
+      fontSize: 12,
       letterSpacing: 1.2,
     );
     return Center(
@@ -149,30 +149,50 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 120,
             radius: 20,
           ),
-          SizedBox(height: 32),
+          SizedBox(height: 16),
+          Text('User Id', style: tslite),
+          Text(userProvider.getUser.stuid, style: tsmain),
+          SizedBox(height: 8),
           Text('Full Name:', style: tslite),
           Text(userProvider.getUser.name, style: tsmain),
-          SizedBox(height: 16),
+          SizedBox(height: 8),
           Text('Email Address:', style: tslite),
           Text(userProvider.getUser.email, style: tsmain),
-          SizedBox(height: 16),
-          Text('My Account Info', style: tslite),
+          SizedBox(height: 8),
+          Text('Firebase Unique Id', style: tslite),
           Text(userProvider.getUser.uid, style: tsmain),
+          SizedBox(height: 8),
+          Text('Account Type', style: tslite),
+          Text(userProvider.getUser.type ? 'Senior' : 'Callee', style: tsmain),
           SizedBox(height: 32),
-          FlatButton.icon(
-            // padding: EdgeInsets.all(15),
-            label: Text('Log Out',
-                style: TextStyle(color: Colors.white, fontSize: 18)),
-            icon: Icon(Icons.logout, color: Colors.white),
-            color: Colors.deepOrange,
-            onPressed: () async {
-              Box b = await Hive.openBox('myprofile');
-              b.put('myemail', '');
-              b.put('mypassword', '');
-              b.put('myuid', '');
-              Navigator.pushReplacementNamed(context, '/');
-            },
-          )
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              FlatButton.icon(
+                label: Text('Log Out',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                icon: Icon(Icons.logout, color: Colors.white),
+                color: Colors.deepOrange,
+                onPressed: () async {
+                  Box b = await Hive.openBox('myprofile');
+                  b.put('myemail', '');
+                  b.put('mypassword', '');
+                  b.put('myuid', '');
+                  Navigator.pushReplacementNamed(context, '/');
+                },
+              ),
+              // SizedBox(height: 8),
+              FlatButton.icon(
+                label: Text('StellarContacts',
+                    style: TextStyle(color: Colors.white)),
+                icon: Icon(Icons.table_view, color: Colors.white),
+                color: Colors.purple,
+                onPressed: () {
+                  Navigator.pushNamed(context, '/stellarcontacts');
+                },
+              )
+            ],
+          ),
         ],
       ),
     );
@@ -191,15 +211,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void notifCallbackFCM() {
     fcm.configure(
       onMessage: (Map<String, dynamic> message) async {
-        print('on msg $message');
+        print('onNotif $message');
+        var data = message['data'] ?? message;
+        print('on msg data: $data');
         Utils.makeToast('onMessage: $message', Colors.green);
       },
       onResume: (Map<String, dynamic> message) async {
-        print('on resume $message');
+        print('onNotifResume $message');
         Utils.makeToast('onResume: $message', Colors.green);
       },
       onLaunch: (Map<String, dynamic> message) async {
-        print('on launch $message');
+        print('onNotifLaunch $message');
         Utils.makeToast('onLaunch: $message', Colors.green);
       },
     );
@@ -212,11 +234,8 @@ class _HomeScreenState extends State<HomeScreen> {
       print(fcmtoken);
       DocumentReference doc =
           FirebaseFirestore.instance.collection('users').doc(uid);
-      await doc.set({
-        'fcmtoken': fcmtoken,
-        'createdAt': FieldValue.serverTimestamp(),
-        'platform': Platform.operatingSystem
-      });
+      await doc
+          .update({'fcmtoken': fcmtoken, 'platform': Platform.operatingSystem});
       Utils.makeToast('Notifications Activated', Colors.green);
     }
   }

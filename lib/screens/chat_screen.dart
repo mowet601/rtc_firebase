@@ -44,6 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _firestore = FirebaseFirestore.instance;
     _receiverUser = MyUser.fromMap(widget.receiver);
+    print('onChatScreen:');
     print(_receiverUser);
     Hive.openBox('myprofile').then((b) {
       _currentUserId = b.get('myuid');
@@ -72,30 +73,13 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(_receiverUser.name),
-          // actions: [
-          //   IconButton(
-          //     padding: EdgeInsets.only(right: 32),
-          //     iconSize: 30,
-          //     icon: Icon(Icons.videocam),
-          //     onPressed: () async =>
-          //         await MyPermissions.isCameraAndMicPermissionsGranted()
-          //             ? CallUtils.dial(
-          //                 from: _senderUser,
-          //                 to: _receiverUser,
-          //                 context: context)
-          //             : Utils.makeToast('Permissions not granted to make call',
-          //                 Colors.deepOrange),
-          //   ),
-          // ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
         floatingActionButton: FloatingActionButton(
-          child: Stack(children: [
-            Icon(
-              Icons.videocam,
-              size: 32,
-            ),
-          ]),
+          child: Icon(
+            Icons.videocam,
+            size: 32,
+          ),
           backgroundColor: Colors.orangeAccent,
           onPressed: () async =>
               await MyPermissions.isCameraAndMicPermissionsGranted()

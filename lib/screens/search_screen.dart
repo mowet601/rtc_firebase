@@ -140,6 +140,11 @@ class _SearchScreenState extends State<SearchScreen> {
             thisUser['email'],
             style: TextStyle(color: Colors.grey),
           ),
+          trailing: Text(
+            thisUser['type'] ? 'Senior' : 'Callee',
+            style: TextStyle(
+                color: thisUser['type'] ? Colors.blue : Colors.purple),
+          ),
         );
       }),
     );
@@ -198,8 +203,10 @@ class _SearchScreenState extends State<SearchScreen> {
       if (element.get('email') != e) {
         var e = element.data();
         print('type: ${e.runtimeType} data: $e');
-        if (e != null) _listofusers.add(e);
-        print('Added User to list: ' + element.get('email'));
+        if (e != null) {
+          _listofusers.add(e);
+          print('Added User to list: ' + element.get('email'));
+        }
       }
     });
   }

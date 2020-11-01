@@ -1,12 +1,17 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:webrtc_test/call_methods.dart';
+
+import 'package:webrtc_test/models/agoraConfig.dart';
 import 'package:webrtc_test/models/callModel.dart';
 import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/logModel.dart';
 import 'package:webrtc_test/models/userModel.dart';
-import 'dart:math';
 
 import 'package:webrtc_test/screens/callscreens/call_screen.dart';
 import 'package:webrtc_test/string_constant.dart';
@@ -41,6 +46,7 @@ class CallUtils {
 
     if (callMade) {
       HiveStore.addLogs(log);
+      sendCallNotification(from.name, to.fcmtoken);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -49,7 +55,44 @@ class CallUtils {
       );
     }
   }
+
+  static sendCallNotification(String callername, String calleetoken) async {
+    FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+    await firebaseMessaging.requestNotificationPermissions(
+      const IosNotificationSettings(
+          sound: true, badge: true, alert: true, provisional: false),
+    );
+    String jsonReq = jsonEncode(
+      <String, dynamic>{
+        'notification': <String, dynamic>{
+          'body': 'Tap here to open uVue videocall',
+          'title': '$callername is calling you'
+        },
+        'priority': 'high',
+        'data': <String, dynamic>{
+          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+          'id': '1',
+          'status': 'done'
+        },
+        'to': calleetoken,
+      },
+    );
+    http.Response response = await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=$FCM_SERVER_TOKEN',
+      },
+      body: jsonReq,
+    );
+    print('onNotifSend: staus: ${response.statusCode}');
+    print('onNotifSend: json: $jsonReq');
+  }
 }
+
+// ------------------------
+// PERMISSION HANDLER CLASS
+// ------------------------
 
 class MyPermissions {
   static Future<bool> isCameraAndMicPermissionsGranted() async {

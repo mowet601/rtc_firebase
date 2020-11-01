@@ -5,7 +5,8 @@ class MyUser {
   String profilePhoto;
   String fcmtoken;
   bool type; // TRUE -> SENIOR RESIDENT
-  String status;
+  String stuid; // UID IN STELLAR SERVERS
+  int status;
 
   MyUser({
     this.uid,
@@ -14,6 +15,7 @@ class MyUser {
     this.status,
     this.fcmtoken,
     this.type,
+    this.stuid,
     this.profilePhoto,
   });
 
@@ -26,6 +28,7 @@ class MyUser {
     data['status'] = user.status;
     data['type'] = user.type;
     data['fcmtoken'] = user.fcmtoken;
+    data['stuid'] = user.stuid;
     return data;
   }
 
@@ -37,5 +40,6 @@ class MyUser {
     this.status = mapData['status'];
     this.type = mapData['type'];
     this.fcmtoken = mapData['fcmtoken'];
+    this.stuid = mapData['stuid'];
   }
 }

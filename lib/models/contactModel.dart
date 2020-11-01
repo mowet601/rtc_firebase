@@ -5,6 +5,9 @@ class ContactModel {
   String fullname;
   String email;
   String profilePhoto;
+  String fcmtoken;
+  String stuid;
+  int status;
   Timestamp timeAdded;
 
   ContactModel({
@@ -12,6 +15,9 @@ class ContactModel {
     this.fullname,
     this.email,
     this.profilePhoto,
+    this.fcmtoken,
+    this.stuid,
+    this.status,
     this.timeAdded,
   });
 

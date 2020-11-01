@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webrtc_test/models/userProvider.dart';
 import 'package:webrtc_test/screens/search_screen.dart';
+import 'package:webrtc_test/screens/stellarcontacts_screen.dart';
 import 'screens/login_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -26,9 +27,10 @@ class _MyAppState extends State<MyApp> {
         initialRoute: '/',
         routes: {
           '/search': (context) => SearchScreen(),
+          '/stellarcontacts': (context) => StellarContactsList()
         },
         home: Scaffold(
-          appBar: AppBar(title: Text('Stellar AgedCare VideoCalls')),
+          appBar: AppBar(title: Text('uVue Videochat')),
           body: Container(
             child: FutureBuilder(
               future: Firebase.initializeApp(),
@@ -58,10 +60,10 @@ class _MyAppState extends State<MyApp> {
               SizedBox(height: 32),
               Image.asset('lib/assets/applogo3.png', width: 80),
               SizedBox(height: 32),
-              Text(
-                'Welcome to uVue VideoChat',
-                style: TextStyle(fontSize: 22),
-              ),
+              // Text(
+              //   'Please Login using your Credentials below',
+              //   // style: TextStyle(fontSize: 22),
+              // ),
               LoginScreen(),
             ],
           )
