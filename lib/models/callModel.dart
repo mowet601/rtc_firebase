@@ -9,6 +9,7 @@ class CallModel {
 
   String channelId;
   bool hasDialed;
+  String timestamp;
 
   CallModel({
     this.callerId,
@@ -19,6 +20,7 @@ class CallModel {
     this.receiverPic,
     this.channelId,
     this.hasDialed,
+    this.timestamp,
   });
 
   Map<String, dynamic> toMap(CallModel call) {
@@ -31,6 +33,7 @@ class CallModel {
     callMap['receiver_pic'] = call.receiverPic;
     callMap['channel_id'] = call.channelId;
     callMap['has_dialed'] = call.hasDialed;
+    callMap['timestamp'] = call.timestamp;
     return callMap;
   }
 
@@ -43,5 +46,6 @@ class CallModel {
     this.receiverPic = callMap['receiver_pic'];
     this.channelId = callMap['channel_id'];
     this.hasDialed = callMap['has_dialed'];
+    this.timestamp = callMap['timestamp'];
   }
 }

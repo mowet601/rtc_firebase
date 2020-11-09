@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:webrtc_test/models/callModel.dart';
 import 'package:webrtc_test/string_constant.dart';
+import 'package:webrtc_test/utilityMan.dart';
 
 class CallMethods {
   final CollectionReference callCollection =
@@ -16,12 +18,19 @@ class CallMethods {
 
       call.hasDialed = false;
       Map<String, dynamic> hasNotDialedMap = call.toMap(call);
-
-      await callCollection.doc(call.callerId).set(hasDialedMap);
-      await callCollection.doc(call.receiverId).set(hasNotDialedMap);
-      return true;
+      var alreadycall = await callCollection.doc(call.receiverId).get();
+      if (alreadycall.exists) {
+        Utils.makeToast(
+            '${call.receiverName} is already on another call', Colors.amber);
+        return false;
+      } else {
+        await callCollection.doc(call.callerId).set(hasDialedMap);
+        await callCollection.doc(call.receiverId).set(hasNotDialedMap);
+        return true;
+      }
     } catch (e) {
       print(e);
+      Utils.makeToast('Error: $e', Colors.red);
       return false;
     }
   }

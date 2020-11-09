@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isLoggingIn = false;
-  BuildContext c;
+  // BuildContext c;
 
   @override
   void dispose() {
@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    c = context;
+    // c = context;
     return Container(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8),
@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.blue,
                   padding: EdgeInsets.all(16),
                   onPressed: () {
-                    performLogin(context);
+                    performLogin();
                   },
                   child: Text(
                     'Sign In',
@@ -140,11 +140,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (e != '' && p != '') {
-      performLogin(c);
+      performLogin();
     }
   }
 
-  void performLogin(BuildContext c) async {
+  void performLogin() async {
     setState(() => _isLoggingIn = true);
     if (_formKey.currentState.validate()) {
       String e = _emailController.text.toLowerCase().trim();

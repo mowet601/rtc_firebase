@@ -2,7 +2,7 @@ name: webrtc_test
 description: Flutter Video Calling using WebRTC and Firebase.
 
 publish_to: 'none'
-version: 1.0.1+1
+version: 1.0.2+2
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -19,14 +19,16 @@ dependencies:
   path_provider: ^1.6.18
   fluttertoast: ^7.1.1
   wakelock: ^0.2.0+1
-  
+  device_info: ^0.4.2+9
+
   # utility
   hive: ^1.4.4+1
   email_validator: ^1.0.5
   cached_network_image: ^2.3.2+1
   emoji_picker: ^0.1.0
   intl: ^0.16.1
-  flutter_ringtone_player: ^2.0.0
+  # flutter_ringtone_player: ^2.0.0
+  assets_audio_player: ^2.0.13
   
   # cloud comms
   agora_rtc_engine: ^3.1.2

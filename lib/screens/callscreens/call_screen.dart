@@ -5,12 +5,13 @@ import 'package:agora_rtc_engine/rtc_remote_view.dart' as RtcRemoteView;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:provider/provider.dart';
+import 'package:hive/hive.dart';
+// import 'package:provider/provider.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:webrtc_test/call_methods.dart';
 import 'package:webrtc_test/models/agoraConfig.dart';
 import 'package:webrtc_test/models/callModel.dart';
-import 'package:webrtc_test/models/userProvider.dart';
+// import 'package:webrtc_test/models/userProvider.dart';
 
 class CallScreen extends StatefulWidget {
   final CallModel call;
@@ -25,7 +26,7 @@ class CallScreen extends StatefulWidget {
 
 class _CallScreenState extends State<CallScreen> {
   final CallMethods callMethods = CallMethods();
-  UserProvider userProvider;
+  // UserProvider userProvider;
   StreamSubscription callStreamSubscription;
 
   final _users = <int>[];
@@ -127,20 +128,22 @@ class _CallScreenState extends State<CallScreen> {
 
   runPostFrameCallback() {
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      userProvider = Provider.of<UserProvider>(context, listen: false);
+      // userProvider = Provider.of<UserProvider>(context, listen: false);
       print('post');
-      callStreamSubscription = callMethods
-          .callStream(uid: userProvider.getUser.uid)
-          .listen((DocumentSnapshot ds) {
-        switch (ds.data()) {
-          case null:
-            print('post null');
-            Navigator.pop(context);
-            break;
-          default:
-            print('post default');
-            break;
-        }
+      Hive.openBox('myprofile').then((box) {
+        String uid = box.get('myid');
+        callStreamSubscription =
+            callMethods.callStream(uid: uid).listen((DocumentSnapshot ds) {
+          switch (ds.data()) {
+            case null:
+              print('post null');
+              Navigator.pop(context);
+              break;
+            default:
+              print('post default');
+              break;
+          }
+        });
       });
     });
   }
@@ -168,7 +171,6 @@ class _CallScreenState extends State<CallScreen> {
 
   Widget _viewRows() {
     /// Helper function to get list of native views
-    /// TODO: Use UIView instead of SurfaceView for iOS
     List<Widget> _getRenderViews() {
       final List<StatefulWidget> list = [];
       list.add(RtcLocalView.SurfaceView());
@@ -195,45 +197,61 @@ class _CallScreenState extends State<CallScreen> {
     switch (views.length) {
       case 1:
         return Container(
+            color: Colors.blue,
             child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            SizedBox(height: 48),
-            Text(
-              'Calling...',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20),
-            ),
-            SizedBox(height: 16),
-            _videoView(views[0]),
-          ],
-        ));
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(height: 48),
+                Text(
+                  'Calling ${widget.call.receiverName}',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+                SizedBox(height: 16),
+                _videoView(views[0]),
+              ],
+            ));
       case 2:
+        Widget w;
+        Orientation currentOrientation = MediaQuery.of(context).orientation;
+        print('orientation: $currentOrientation');
+        // double pipsize = MediaQuery.of(context).size.height / 3;
+        // print('onVideo 2 Users: pipsize: $pipsize');
+        if (currentOrientation == Orientation.landscape)
+          w = Row(
+            children: <Widget>[
+              _expandedVideoRow([views[1]]),
+              _expandedVideoRow([views[0]]),
+            ],
+          );
+        else
+          w = Column(
+            children: <Widget>[
+              _expandedVideoRow([views[1]]),
+              _expandedVideoRow([views[0]]),
+            ],
+          );
         return Container(
-            child: Column(
-          children: <Widget>[
-            _expandedVideoRow([views[1]]),
-            _expandedVideoRow([views[0]]),
-          ],
-        ));
-      case 3:
-        return Container(
-            child: Column(
-          children: <Widget>[
-            _expandedVideoRow(views.sublist(0, 2)),
-            _expandedVideoRow(views.sublist(2, 3))
-          ],
-        ));
-      case 4:
-        return Container(
-            child: Column(
-          children: <Widget>[
-            _expandedVideoRow(views.sublist(0, 2)),
-            _expandedVideoRow(views.sublist(2, 4))
-          ],
-        ));
+          child: w,
+        );
+      // case 3:
+      //   return Container(
+      //       child: Column(
+      //     children: <Widget>[
+      //       _expandedVideoRow(views.sublist(0, 2)),
+      //       _expandedVideoRow(views.sublist(2, 3))
+      //     ],
+      //   ));
+      // case 4:
+      //   return Container(
+      //       child: Column(
+      //     children: <Widget>[
+      //       _expandedVideoRow(views.sublist(0, 2)),
+      //       _expandedVideoRow(views.sublist(2, 4))
+      //     ],
+      //   ));
       default:
     }
     return Container();

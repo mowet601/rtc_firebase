@@ -8,7 +8,8 @@ import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:webrtc_test/models/messageModel.dart';
-import 'package:webrtc_test/models/userModel.dart';
+import 'package:webrtc_test/models/stellarUserModel.dart';
+// import 'package:webrtc_test/models/userModel.dart';
 import 'package:webrtc_test/screens/callscreens/call_utilities.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 import 'package:webrtc_test/string_constant.dart';
@@ -16,7 +17,6 @@ import '../utilityMan.dart';
 
 class ChatScreen extends StatefulWidget {
   final Map<String, dynamic> receiver;
-
   ChatScreen({this.receiver});
 
   @override
@@ -30,40 +30,54 @@ class _ChatScreenState extends State<ChatScreen> {
   bool showEmojipicker = false;
   FocusNode _textfieldFocus = FocusNode();
 
-  MyUser _senderUser;
-  MyUser _receiverUser;
-  Map<String, dynamic> _sender;
+  StellarUserModel _senderUser;
+  StellarUserModel _receiverUser;
+
   String _currentUserId;
-  FirebaseFirestore _firestore;
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
   StorageReference _storageRef;
   bool isImageLoading = false;
-  // ImageUploadProvider _imageUploadProvider;
 
   @override
   void initState() {
     super.initState();
-    _firestore = FirebaseFirestore.instance;
-    _receiverUser = MyUser.fromMap(widget.receiver);
-    print('onChatScreen:');
-    print(_receiverUser);
+    print('onChat Init');
+    Map<String, dynamic> receiverMap = {
+      'userId': widget.receiver['calleeId'],
+      'userName': widget.receiver['calleeName'],
+      'photoUrl': widget.receiver['photoUrl']
+    };
+    _receiverUser = StellarUserModel.fromMap(receiverMap);
     Hive.openBox('myprofile').then((b) {
-      _currentUserId = b.get('myuid');
+      print('chat onHive Init');
+      _currentUserId = b.get('myid');
+      Map<String, dynamic> senderMap = {
+        'userId': _currentUserId,
+        'userName': b.get('myname'),
+        'photoUrl':
+            'https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png'
+        // TODO : change generic photoUrl to user's own photo
+      };
+      // setState(() {
+      _senderUser = StellarUserModel.fromMap(senderMap);
+      // });
       _firestore
-          .collection(USERS_COLLECTION)
-          .doc('$_currentUserId')
+          .collection(TOKENS_COLLECTION)
+          .doc(_receiverUser.uid)
           .get()
-          .then((docSnapshot) {
-        setState(() {
-          _sender = docSnapshot.data();
-          _senderUser = MyUser.fromMap(_sender);
-        });
+          .then((value) {
+        _receiverUser.fcmtoken = value.data()['fcmtoken'];
+        print('chat on fcmtoken get');
       });
+      print('chat hiveInit done');
     });
+    print('chat init done');
   }
 
   @override
   Widget build(BuildContext context) {
     // _imageUploadProvider = Provider.of<ImageUploadProvider>(context);
+    print('chat build start');
     Wakelock.enabled.then((value) => print('onChat: build wakelock is $value'));
     return PickupLayout(
       scaffold: Scaffold(
@@ -72,7 +86,20 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text(_receiverUser.name),
+          title: Row(
+            children: [
+              CircleAvatar(
+                maxRadius: 18,
+                backgroundColor: Colors.grey,
+                child: CachedImage(
+                  _receiverUser.profilePhoto,
+                  radius: 50,
+                  isRound: true,
+                ),
+              ),
+              Text('   ' + _receiverUser.name),
+            ],
+          ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
         floatingActionButton: FloatingActionButton(
@@ -99,7 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                 : Container(),
             getChatControls(),
-            showEmojipicker ? Container(child: emojiContainer()) : Container(),
+            // showEmojipicker ? Container(child: emojiContainer()) : Container(),
           ],
         ),
       ),
@@ -165,38 +192,38 @@ class _ChatScreenState extends State<ChatScreen> {
                     fillColor: Colors.white,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.insert_emoticon,
-                    color: Colors.blue,
-                  ),
-                  onPressed: () {
-                    if (!showEmojipicker) {
-                      hideKeyboard();
-                      showEmojiCon();
-                    } else {
-                      showKeyboard();
-                      hideEmojiCon();
-                    }
-                  },
-                )
+                // IconButton(
+                //   icon: Icon(
+                //     Icons.insert_emoticon,
+                //     color: Colors.blue,
+                //   ),
+                //   onPressed: () {
+                //     if (!showEmojipicker) {
+                //       hideKeyboard();
+                //       showEmojiCon();
+                //     } else {
+                //       showKeyboard();
+                //       hideEmojiCon();
+                //     }
+                //   },
+                // )
               ],
             ),
           ),
-          // SizedBox(width: 10),
-          // isWriting
-          //     ? Container()
-          //     : GestureDetector(
-          //         onTap: () => pickImage(ImageSource.gallery),
-          //         child: Icon(Icons.photo, color: Colors.white),
-          //       ),
-          // SizedBox(width: 10),
-          // isWriting
-          //     ? Container()
-          //     : GestureDetector(
-          //         onTap: () => pickImage(ImageSource.camera),
-          //         child: Icon(Icons.camera_alt, color: Colors.white),
-          //       ),
+          SizedBox(width: 10),
+          isWriting
+              ? Container()
+              : GestureDetector(
+                  onTap: () => pickImage(ImageSource.gallery),
+                  child: Icon(Icons.photo, color: Colors.white),
+                ),
+          SizedBox(width: 10),
+          isWriting
+              ? Container()
+              : GestureDetector(
+                  onTap: () => pickImage(ImageSource.camera),
+                  child: Icon(Icons.camera_alt, color: Colors.white),
+                ),
           isWriting
               ? Container(
                   margin: EdgeInsets.only(left: 10),
@@ -221,6 +248,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget getMessageList() {
+    print('onMessageList: $_currentUserId -> ${_receiverUser.uid}');
     return StreamBuilder(
       stream: _firestore
           .collection(MESSAGES_COLLECTION)
@@ -231,23 +259,45 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.data == null)
           return Center(child: CircularProgressIndicator());
+        print('msg length: ${snapshot.data.docs.length}');
 
-        SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-          _listScrollController.animateTo(
-            _listScrollController.position.minScrollExtent,
-            duration: Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
+        if (snapshot.data.docs.length < 1) {
+          return Center(
+            child: Container(
+              // color: Colors.blueGrey,
+              padding: EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.blueGrey,
+              ),
+              child: Text(
+                'Type your message below\n then press the send button\n to start your conversation\nwith ${_receiverUser.name}\n\n Or tap the orange button\n at the top to make a video call',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Colors.white,
+                    // fontWeight: FontWeight.bold,
+                    fontSize: 16),
+              ),
+            ),
           );
-        });
-        return ListView.builder(
-          padding: EdgeInsets.all(10),
-          itemCount: snapshot.data.docs.length,
-          reverse: true,
-          controller: _listScrollController,
-          itemBuilder: (context, index) {
-            return getChatMessageBubble(snapshot.data.docs[index]);
-          },
-        );
+        } else {
+          SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+            _listScrollController.animateTo(
+              _listScrollController.position.minScrollExtent,
+              duration: Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+            );
+          });
+          return ListView.builder(
+            padding: EdgeInsets.all(10),
+            itemCount: snapshot.data.docs.length,
+            reverse: true,
+            controller: _listScrollController,
+            itemBuilder: (context, index) {
+              return getChatMessageBubble(snapshot.data.docs[index]);
+            },
+          );
+        }
       },
     );
   }
@@ -345,6 +395,9 @@ class _ChatScreenState extends State<ChatScreen> {
         .doc(message.receiverId)
         .collection(message.senderId)
         .add(map);
+
+    CallUtils.sendChatMsgNotification(
+        _senderUser.name, _receiverUser.fcmtoken, text);
   }
 
   showKeyboard() => _textfieldFocus.requestFocus();
@@ -356,14 +409,16 @@ class _ChatScreenState extends State<ChatScreen> {
         showEmojipicker = true;
       });
 
-  // TODO: handle path null error - image not picked
   void pickImage(ImageSource source) async {
     Utils.makeToast('Picking Image', Colors.blue);
     File selectedImage = await Utils.pickImage(source);
-    uploadImage2Firebase(
-        image: selectedImage,
-        receiverId: _receiverUser.uid,
-        senderId: _currentUserId);
+    if (selectedImage != null)
+      uploadImage2Firebase(
+          image: selectedImage,
+          receiverId: _receiverUser.uid,
+          senderId: _currentUserId);
+    else
+      Utils.makeToast('Image not selected', Colors.yellow);
   }
 
   void uploadImage2Firebase(

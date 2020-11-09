@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -11,15 +10,21 @@ import 'package:webrtc_test/models/agoraConfig.dart';
 import 'package:webrtc_test/models/callModel.dart';
 import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/logModel.dart';
-import 'package:webrtc_test/models/userModel.dart';
+import 'package:webrtc_test/models/stellarUserModel.dart';
+// import 'package:webrtc_test/models/userModel.dart';
 
 import 'package:webrtc_test/screens/callscreens/call_screen.dart';
 import 'package:webrtc_test/string_constant.dart';
+import 'package:webrtc_test/utilityMan.dart';
 
 class CallUtils {
   static final CallMethods callMethods = CallMethods();
 
-  static dial({MyUser from, MyUser to, context}) async {
+  static dial({StellarUserModel from, StellarUserModel to, context}) async {
+    String newChannelId =
+        '${from.uid}-${to.uid}-${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}';
+    print('CallMethods: newChannel $newChannelId created');
+    print('CallMethods: ReceiverFCMToken: ${from.fcmtoken}');
     CallModel call = CallModel(
       callerId: from.uid,
       callerName: from.name,
@@ -28,9 +33,8 @@ class CallUtils {
       receiverName: to.name,
       receiverPic: to.profilePhoto,
       // channelId: Random().nextInt(100).toRadixString(16) \
-      channelId: Random().nextInt(1000).toRadixString(16) +
-          '-' +
-          DateTime.now().millisecondsSinceEpoch.toRadixString(16),
+      channelId: newChannelId,
+      timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
     );
     LogModel log = LogModel(
       callerName: from.name,
@@ -57,6 +61,10 @@ class CallUtils {
   }
 
   static sendCallNotification(String callername, String calleetoken) async {
+    if (calleetoken == null) {
+      Utils.makeToast('onCallUtils.Dial : FCM Token is Null', Colors.red);
+      return;
+    }
     FirebaseMessaging firebaseMessaging = FirebaseMessaging();
     await firebaseMessaging.requestNotificationPermissions(
       const IosNotificationSettings(
@@ -65,8 +73,47 @@ class CallUtils {
     String jsonReq = jsonEncode(
       <String, dynamic>{
         'notification': <String, dynamic>{
-          'body': 'Tap here to open uVue videocall',
+          'body': 'Tap here to open uVue app',
           'title': '$callername is calling you'
+        },
+        'priority': 'high',
+        'data': <String, dynamic>{
+          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+          'id': '1',
+          'status': 'done'
+        },
+        'to': calleetoken,
+      },
+    );
+    http.Response response = await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=$FCM_SERVER_TOKEN',
+      },
+      body: jsonReq,
+    );
+    print('onNotifSend: staus: ${response.statusCode}');
+    print('onNotifSend: json: $jsonReq');
+  }
+
+  static sendChatMsgNotification(
+      String callername, String calleetoken, String chatmsg) async {
+    if (calleetoken == null) {
+      Utils.makeToast('FCM Token is Null : Chat', Colors.red);
+      return;
+    }
+    FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+    await firebaseMessaging.requestNotificationPermissions(
+      const IosNotificationSettings(
+          sound: true, badge: true, alert: true, provisional: false),
+    );
+    if (chatmsg.length > 30) chatmsg = chatmsg.substring(0, 31);
+    String jsonReq = jsonEncode(
+      <String, dynamic>{
+        'notification': <String, dynamic>{
+          'body': '$callername messaged you',
+          'title': '$chatmsg'
         },
         'priority': 'high',
         'data': <String, dynamic>{

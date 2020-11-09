@@ -15,9 +15,9 @@ class Utils {
   static void makeToast(String messageStr, Color color) {
     Fluttertoast.showToast(
         msg: messageStr,
-        toastLength: Toast.LENGTH_SHORT,
+        toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
+        timeInSecForIosWeb: 2,
         backgroundColor: color,
         textColor: Colors.white,
         fontSize: 16.0);
@@ -25,9 +25,16 @@ class Utils {
 
   static Future<File> pickImage(ImageSource source) async {
     final ImagePicker ip = ImagePicker();
-    PickedFile selectedImage = await ip.getImage(source: source);
-    File file = File(selectedImage.path);
-    return compressImage(file);
+    PickedFile selectedImage;
+    try {
+      selectedImage = await ip.getImage(source: source);
+    } catch (e) {
+      print(
+          'Chat onPickImage: PlatformException -> photo_access_denied, The user did not allow photo access');
+      print(e);
+    }
+    File file = selectedImage == null ? File(selectedImage.path) : null;
+    return file == null ? compressImage(file) : null;
   }
 
   static Future<File> compressImage(File image2compress) async {

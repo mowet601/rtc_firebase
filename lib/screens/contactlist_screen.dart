@@ -1,101 +1,69 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:webrtc_test/models/contactModel.dart';
-import 'package:webrtc_test/models/userProvider.dart';
+import 'package:hive/hive.dart';
+// import 'package:provider/provider.dart';
+// import 'package:webrtc_test/models/contactModel.dart';
+// import 'package:webrtc_test/models/userProvider.dart';
 import 'package:webrtc_test/screens/chat_screen.dart';
-import 'package:webrtc_test/string_constant.dart';
 import 'package:webrtc_test/utilityMan.dart';
+import 'package:http/http.dart' as http;
 
 import 'custom_tile.dart';
 
 class ContactListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final UserProvider userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
-      floatingActionButton: searchButton(context),
-      body: ChatListContainer(myUserId: userProvider.getUser.uid),
-    );
-  }
-
-  Widget searchButton(BuildContext c) {
-    return Container(
-      decoration: BoxDecoration(
-          gradient: LinearGradient(
-              colors: [Colors.tealAccent, Colors.blueAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(50)),
-      child: IconButton(
-        icon: Icon(Icons.search),
-        color: Colors.white,
-        iconSize: 35,
-        onPressed: () {
-          Navigator.pushNamed(c, '/search');
-        },
+      body: Container(
+        child: FutureBuilder<List<dynamic>>(
+            future: fetchContacts(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                var docList = snapshot.data;
+                if (docList.isEmpty) {
+                  return quietBox();
+                } else
+                  return ListView.builder(
+                      padding: EdgeInsets.all(10),
+                      itemCount: docList.length,
+                      itemBuilder: (context, index) {
+                        return contactTile(docList[index], context, index);
+                      });
+              }
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }),
       ),
-      padding: EdgeInsets.all(10),
-    );
-  }
-}
-
-class ChatListContainer extends StatelessWidget {
-  final String myUserId;
-
-  const ChatListContainer({this.myUserId});
-
-  @override
-  Widget build(BuildContext context) {
-    // print('BUILD: chatlist container');
-    return Container(
-      child: StreamBuilder<QuerySnapshot>(
-          stream: fetchContacts(myUserId),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              var docList = snapshot.data.docs;
-              if (docList.isEmpty) {
-                return quietBox();
-              } else
-                return ListView.builder(
-                    padding: EdgeInsets.all(10),
-                    itemCount: docList.length,
-                    itemBuilder: (context, index) {
-                      ContactModel contact =
-                          ContactModel.fromMap(docList[index].data());
-                      return contactTile(contact, context);
-                    });
-            }
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }),
     );
   }
 
-  Widget contactTile(ContactModel contact, BuildContext context) {
+  Widget contactTile(
+      Map<String, dynamic> contact, BuildContext context, int index) {
     return CustomTile(
       mini: false,
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatScreen(receiver: contact.toMap()),
+            builder: (context) => ChatScreen(receiver: contact),
           ),
         );
       },
       title: Text(
-        contact.fullname,
+        contact['calleeName'],
         style: TextStyle(
             fontSize: 20, color: Colors.blue, fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
-        contact.email,
-        style: TextStyle(color: Colors.blueGrey, fontSize: 14),
+        '${index + 1}',
+        // contact.email,
+        style: TextStyle(color: Colors.black26, fontSize: 14),
       ),
       trailing: Text(
-        contact.uid.substring(0, 5),
-        style: TextStyle(color: Colors.black26, fontSize: 12),
+        contact['calleeId'],
+        style: TextStyle(color: Colors.grey, fontSize: 16),
       ),
       leading: Container(
         constraints: BoxConstraints(maxHeight: 50, maxWidth: 50),
@@ -105,7 +73,7 @@ class ChatListContainer extends StatelessWidget {
               maxRadius: 30,
               backgroundColor: Colors.grey,
               child: CachedImage(
-                contact.profilePhoto,
+                contact['photoUrl'],
                 radius: 50,
                 isRound: true,
               ),
@@ -127,14 +95,6 @@ class ChatListContainer extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Stream<QuerySnapshot> fetchContacts(String userId) {
-    return FirebaseFirestore.instance
-        .collection(USERS_COLLECTION)
-        .doc(userId)
-        .collection(CONTACTS_COLLECTION)
-        .snapshots();
   }
 
   Widget quietBox() {
@@ -159,7 +119,7 @@ class ChatListContainer extends StatelessWidget {
               ),
               SizedBox(height: 25),
               Text(
-                'Search for your friends & family to chat or call them',
+                'Ask for your friends & family to be added to uVue',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   letterSpacing: 1.2,
@@ -170,7 +130,7 @@ class ChatListContainer extends StatelessWidget {
               ),
               SizedBox(height: 25),
               Text(
-                'Tap the round floating Search button to start',
+                'Their names will appear here once added.',
                 style: TextStyle(
                   color: Colors.white,
                 ),
@@ -180,5 +140,20 @@ class ChatListContainer extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<List<dynamic>> fetchContacts() async {
+    Box box = await Hive.openBox('myprofile');
+    String uid = box.get('myid');
+    // print('$uid');
+
+    String url = 'https://admin.stellar.care/chat/callee.php';
+    var response = await http
+        .post(url, body: {'userId': '$uid', 'secret': '909856238209123'});
+    List<dynamic> jsonContacts = jsonDecode(response.body);
+
+    // print('Response Status: ${response.statusCode}');
+    // print('Response Json: $jsonContacts');
+    return jsonContacts;
   }
 }

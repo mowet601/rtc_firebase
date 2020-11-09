@@ -1,16 +1,9 @@
-import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:hive/hive.dart';
-import 'package:provider/provider.dart';
 import 'package:webrtc_test/models/hive_db.dart';
-import 'package:webrtc_test/models/userProvider.dart';
 import 'package:webrtc_test/screens/log_screen.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 import 'package:webrtc_test/screens/contactlist_screen.dart';
-import 'package:webrtc_test/utilityMan.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -20,50 +13,50 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   PageController pageController;
   int _page = 0;
-  UserProvider userProvider;
-  bool userLoading;
-  final FirebaseMessaging fcm = FirebaseMessaging();
+  String uname;
+  String uid;
+  bool userLoading = true;
+  Box box;
 
   @override
   void initState() {
     super.initState();
-    userProvider = Provider.of<UserProvider>(context, listen: false);
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
-      userProvider.refreshUser().then((_) {
-        HiveStore.init(userProvider.getUser.uid);
-        if (Platform.isIOS) {
-          fcm.onIosSettingsRegistered
-              .listen((event) => registerFCM(userProvider.getUser.uid));
-          fcm.requestNotificationPermissions(IosNotificationSettings());
-        } else
-          registerFCM(userProvider.getUser.uid);
-        notifCallbackFCM();
-        if (userLoading)
-          setState(() {
-            userLoading = false;
-          });
+    Hive.openBox('myprofile').then((b) {
+      box = b;
+      uname = box.get('myname');
+      uid = box.get('myid');
+      print('home init: name:$uname uId:$uid loading:$userLoading');
+      HiveStore.init(uid);
+      setState(() {
+        userLoading = false;
       });
     });
     pageController = PageController();
   }
 
+  void navigationTapped(int page) => pageController.jumpToPage(page);
+
+  void onPageChanged(int page) => setState(() {
+        _page = page;
+      });
+
   @override
   Widget build(BuildContext context) {
-    userLoading = userProvider.getUser == null;
+    // userLoading = uid == null;
     return PickupLayout(
       scaffold: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title:
-              getUsernameBar(userLoading ? '...' : userProvider.getUser.name),
+          title: getUsernameBar(userLoading ? '...' : uname),
         ),
         body: PageView(
+          physics: NeverScrollableScrollPhysics(),
           children: [
             Container(child: ContactListScreen()),
             Container(child: LogScreen()),
             Container(
-                child:
-                    userLoading ? CircularProgressIndicator() : ProfilePage())
+              child: userLoading ? CircularProgressIndicator() : profilePage(),
+            )
           ],
           controller: pageController,
           onPageChanged: onPageChanged,
@@ -122,121 +115,86 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ignore: non_constant_identifier_names
-  Widget ProfilePage() {
+  Widget profilePage() {
     TextStyle tsmain = TextStyle(
       fontWeight: FontWeight.bold,
       color: Colors.blue,
-      fontSize: 16,
+      fontSize: 24,
     );
     TextStyle tslite = TextStyle(
       color: Colors.blueGrey,
-      fontSize: 12,
+      fontSize: 16,
       letterSpacing: 1.2,
     );
+    // Box b = await Hive.openBox('myprofile');
     return Center(
       child: Column(
         children: [
-          SizedBox(height: 40),
+          SizedBox(height: 48),
           Text(
             'My Account Info',
             style: tslite,
           ),
-          SizedBox(height: 16),
-          CachedImage(
-            userProvider.getUser.profilePhoto,
-            height: 120,
-            width: 120,
-            radius: 20,
-          ),
-          SizedBox(height: 16),
-          Text('User Id', style: tslite),
-          Text(userProvider.getUser.stuid, style: tsmain),
-          SizedBox(height: 8),
-          Text('Full Name:', style: tslite),
-          Text(userProvider.getUser.name, style: tsmain),
-          SizedBox(height: 8),
-          Text('Email Address:', style: tslite),
-          Text(userProvider.getUser.email, style: tsmain),
-          SizedBox(height: 8),
-          Text('Firebase Unique Id', style: tslite),
-          Text(userProvider.getUser.uid, style: tsmain),
-          SizedBox(height: 8),
-          Text('Account Type', style: tslite),
-          Text(userProvider.getUser.type ? 'Senior' : 'Callee', style: tsmain),
+          // Divider(indent: 64, endIndent: 64, thickness: 2),
+          // SizedBox(height: 16),
+          // CachedImage(
+          //   userProvider.getUser.profilePhoto,
+          //   height: 120,
+          //   width: 120,
+          //   radius: 20,
+          // ),
           SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              FlatButton.icon(
-                label: Text('Log Out',
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
-                icon: Icon(Icons.logout, color: Colors.white),
-                color: Colors.deepOrange,
-                onPressed: () async {
-                  Box b = await Hive.openBox('myprofile');
-                  b.put('myemail', '');
-                  b.put('mypassword', '');
-                  b.put('myuid', '');
-                  Navigator.pushReplacementNamed(context, '/');
-                },
-              ),
-              // SizedBox(height: 8),
-              FlatButton.icon(
-                label: Text('StellarContacts',
-                    style: TextStyle(color: Colors.white)),
-                icon: Icon(Icons.table_view, color: Colors.white),
-                color: Colors.purple,
-                onPressed: () {
-                  Navigator.pushNamed(context, '/stellarcontacts');
-                },
-              )
-            ],
+          Text('User Id', style: tslite),
+          Text(uid, style: tsmain),
+          SizedBox(height: 16),
+          Text('User Name', style: tslite),
+          Text(uname, style: tsmain),
+          SizedBox(height: 16),
+          // Text('Email Address:', style: tslite),
+          // Text(userProvider.getUser.email, style: tsmain),
+          // SizedBox(height: 8),
+          Text('Account Type', style: tslite),
+          Text(box.get('mytype', defaultValue: 'unknown'), style: tsmain),
+          SizedBox(height: 48),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+          //   children: [
+          FlatButton.icon(
+            label: Text('Log Out',
+                style: TextStyle(color: Colors.white, fontSize: 16)),
+            icon: Icon(Icons.logout, color: Colors.white),
+            color: Colors.deepOrange,
+            onPressed: () async {
+              Box b = await Hive.openBox('myprofile');
+              await b.put('myname', '');
+              // b.put('mypassword', '');
+              await b.put('myid', '');
+              Navigator.pushReplacementNamed(context, '/');
+            },
           ),
+          SizedBox(height: 8),
+          SizedBox(
+            width: 280,
+            child: Text(
+              'Note that you will need to contact the uVue admin for the code and log back in!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.amber, fontSize: 12),
+            ),
+          )
+          // SizedBox(height: 8),
+          // FlatButton.icon(
+          //   label: Text('StellarContacts',
+          //       style: TextStyle(color: Colors.white)),
+          //   icon: Icon(Icons.table_view, color: Colors.white),
+          //   color: Colors.purple,
+          //   onPressed: () {
+          //     Navigator.pushNamed(context, '/stellarcontacts');
+          //   },
+          // )
+          //   ],
+          // ),
         ],
       ),
     );
-  }
-
-  void navigationTapped(int page) {
-    pageController.jumpToPage(page);
-  }
-
-  void onPageChanged(int page) {
-    setState(() {
-      _page = page;
-    });
-  }
-
-  void notifCallbackFCM() {
-    fcm.configure(
-      onMessage: (Map<String, dynamic> message) async {
-        print('onNotif $message');
-        var data = message['data'] ?? message;
-        print('on msg data: $data');
-        Utils.makeToast('onMessage: $message', Colors.green);
-      },
-      onResume: (Map<String, dynamic> message) async {
-        print('onNotifResume $message');
-        Utils.makeToast('onResume: $message', Colors.green);
-      },
-      onLaunch: (Map<String, dynamic> message) async {
-        print('onNotifLaunch $message');
-        Utils.makeToast('onLaunch: $message', Colors.green);
-      },
-    );
-  }
-
-  registerFCM(String uid) async {
-    fcm.subscribeToTopic('all');
-    String fcmtoken = await fcm.getToken();
-    if (fcmtoken != null) {
-      print(fcmtoken);
-      DocumentReference doc =
-          FirebaseFirestore.instance.collection('users').doc(uid);
-      await doc
-          .update({'fcmtoken': fcmtoken, 'platform': Platform.operatingSystem});
-      Utils.makeToast('Notifications Activated', Colors.green);
-    }
   }
 }
