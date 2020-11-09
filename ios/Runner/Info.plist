@@ -24,14 +24,14 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>The app requires this so that media ringtone can be played when calls arrive</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The app requires camera usage to make video calls</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>The app requires microphone usage to make video calls</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>The app requires photo library usage to get and attach image media</string>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>The app requires this so that media ringtone can be played when calls arrive</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
