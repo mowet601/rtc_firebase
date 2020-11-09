@@ -1,6 +1,6 @@
 **Privacy Policy**
 
-Stellar Vision built the uVue Videochat app as a Free app. This SERVICE is provided by Stellar Vision at no cost and is intended for use as is.
+Stellar Vision built the uVue Videochat app as a Free app to uVue residents and their friends and families. This SERVICE is provided by Stellar Vision at no cost and is intended for use as is.
 
 This page is used to inform visitors regarding our policies with the collection, use, and disclosure of Personal Information if anyone decided to use our Service.
 
