@@ -60,41 +60,50 @@ class CallUtils {
     }
   }
 
-  static sendCallNotification(String callername, String calleetoken) async {
+  static sendCallNotification(
+      String callerid, String callername, String calleetoken) async {
     if (calleetoken == null) {
       Utils.makeToast('onCallUtils.Dial : FCM Token is Null', Colors.red);
       return;
     }
-    FirebaseMessaging firebaseMessaging = FirebaseMessaging();
-    await firebaseMessaging.requestNotificationPermissions(
-      const IosNotificationSettings(
-          sound: true, badge: true, alert: true, provisional: false),
-    );
-    String jsonReq = jsonEncode(
-      <String, dynamic>{
-        'notification': <String, dynamic>{
-          'body': 'Tap here to open uVue app',
-          'title': '$callername is calling you'
-        },
-        'priority': 'high',
-        'data': <String, dynamic>{
-          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-          'id': '1',
-          'status': 'done'
-        },
-        'to': calleetoken,
-      },
-    );
+    FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+    await firebaseMessaging.requestPermission();
+
     http.Response response = await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': 'key=$FCM_SERVER_TOKEN',
+        'Authorization': 'key=$FCM_SERVER_TOKEN'
       },
-      body: jsonReq,
+      body: jsonEncode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
+            'body': 'Tap here to open uVue app',
+            'title': '$callername is calling you'
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'callerid': '$callerid',
+            'type': 'call',
+            'callername': '$callername'
+          },
+          'to': calleetoken,
+        },
+      ),
     );
+
+    // TODO : Change to real Cloud Function API Endpoint
+    http.Response response2 = await http.post(
+        'https://us-central1-<project-id>.cloudfunctions.net/date',
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(<String, dynamic>{
+          'callerid': '$callerid',
+          'callername': '$callername',
+          'calleetoken': calleetoken
+        }));
+
     print('onNotifSend: staus: ${response.statusCode}');
-    print('onNotifSend: json: $jsonReq');
   }
 
   static sendChatMsgNotification(
@@ -103,17 +112,15 @@ class CallUtils {
       Utils.makeToast('FCM Token is Null : Chat', Colors.red);
       return;
     }
-    FirebaseMessaging firebaseMessaging = FirebaseMessaging();
-    await firebaseMessaging.requestNotificationPermissions(
-      const IosNotificationSettings(
-          sound: true, badge: true, alert: true, provisional: false),
-    );
+    FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+    await firebaseMessaging.requestPermission();
+
     if (chatmsg.length > 30) chatmsg = chatmsg.substring(0, 31);
     String jsonReq = jsonEncode(
       <String, dynamic>{
         'notification': <String, dynamic>{
-          'body': '$callername messaged you',
-          'title': '$chatmsg'
+          'title': '$callername messaged you',
+          'body': '$chatmsg'
         },
         'priority': 'high',
         'data': <String, dynamic>{
@@ -124,6 +131,7 @@ class CallUtils {
         'to': calleetoken,
       },
     );
+
     http.Response response = await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
@@ -132,8 +140,8 @@ class CallUtils {
       },
       body: jsonReq,
     );
-    print('onNotifSend: staus: ${response.statusCode}');
-    print('onNotifSend: json: $jsonReq');
+
+    print('onNotifSend done: ${response.statusCode}\n$jsonReq');
   }
 }
 

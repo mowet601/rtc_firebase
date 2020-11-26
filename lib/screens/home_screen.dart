@@ -1,37 +1,93 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/screens/log_screen.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 import 'package:webrtc_test/screens/contactlist_screen.dart';
+import 'package:webrtc_test/string_constant.dart';
+import 'package:webrtc_test/utilityMan.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   PageController pageController;
   int _page = 0;
-  String uname;
-  String uid;
+  String uname, uid, type;
   bool userLoading = true;
-  Box box;
 
   @override
   void initState() {
     super.initState();
     Hive.openBox('myprofile').then((b) {
-      box = b;
-      uname = box.get('myname');
-      uid = box.get('myid');
+      // box = b;
+      uname = b.get('myname');
+      uid = b.get('myid');
+      type = b.get('mytype');
       print('home init: name:$uname uId:$uid loading:$userLoading');
       HiveStore.init(uid);
+      uid != null
+          ? FirebaseFirestore.instance
+              .collection(TOKENS_COLLECTION)
+              .doc(uid)
+              .update({'status': 2})
+          : print('app opened');
       setState(() {
         userLoading = false;
       });
     });
+    WidgetsBinding.instance.addObserver(this);
     pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // String t_uid = uid;
+    // print('onAppLifecycleChange: id $uid');
+    super.didChangeAppLifecycleState(state);
+    switch (state) {
+      case AppLifecycleState.resumed:
+        uid != null
+            ? FirebaseFirestore.instance
+                .collection(TOKENS_COLLECTION)
+                .doc(uid)
+                .update({'status': 2})
+            : print('app resumed');
+        break;
+      case AppLifecycleState.inactive:
+        uid != null
+            ? FirebaseFirestore.instance
+                .collection(TOKENS_COLLECTION)
+                .doc(uid)
+                .update({'status': 0})
+            : print('app closed');
+        break;
+      case AppLifecycleState.paused:
+        uid != null
+            ? FirebaseFirestore.instance
+                .collection(TOKENS_COLLECTION)
+                .doc(uid)
+                .update({'status': 1})
+            : print('app paused');
+        break;
+      case AppLifecycleState.detached:
+        uid != null
+            ? FirebaseFirestore.instance
+                .collection(TOKENS_COLLECTION)
+                .doc(uid)
+                .update({'status': 1})
+            : print('app detached');
+        break;
+    }
   }
 
   void navigationTapped(int page) => pageController.jumpToPage(page);
@@ -52,7 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
         body: PageView(
           physics: NeverScrollableScrollPhysics(),
           children: [
-            Container(child: ContactListScreen()),
+            Container(
+              child: userLoading
+                  ? CircularProgressIndicator()
+                  : ContactListScreen(myuid: uid),
+            ),
             Container(child: LogScreen()),
             Container(
               child: userLoading ? CircularProgressIndicator() : profilePage(),
@@ -119,18 +179,18 @@ class _HomeScreenState extends State<HomeScreen> {
     TextStyle tsmain = TextStyle(
       fontWeight: FontWeight.bold,
       color: Colors.blue,
-      fontSize: 24,
+      fontSize: 22,
     );
     TextStyle tslite = TextStyle(
       color: Colors.blueGrey,
-      fontSize: 16,
+      // fontSize: 16,
       letterSpacing: 1.2,
     );
     // Box b = await Hive.openBox('myprofile');
     return Center(
       child: Column(
         children: [
-          SizedBox(height: 48),
+          SizedBox(height: 32),
           Text(
             'My Account Info',
             style: tslite,
@@ -143,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
           //   width: 120,
           //   radius: 20,
           // ),
-          SizedBox(height: 32),
+          SizedBox(height: 16),
           Text('User Id', style: tslite),
           Text(uid, style: tsmain),
           SizedBox(height: 16),
@@ -152,10 +212,51 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 16),
           // Text('Email Address:', style: tslite),
           // Text(userProvider.getUser.email, style: tsmain),
-          // SizedBox(height: 8),
           Text('Account Type', style: tslite),
-          Text(box.get('mytype', defaultValue: 'unknown'), style: tsmain),
-          SizedBox(height: 48),
+          Text(type, style: tsmain),
+          SizedBox(height: 16),
+          Text('Online Status Indicator', style: tslite),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FlatButton(
+                child: Text('Offline', style: TextStyle(color: Colors.white)),
+                color: Colors.deepOrange[600],
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection(TOKENS_COLLECTION)
+                      .doc(uid)
+                      .update({'status': 0});
+                  Utils.makeToast('Status -> Offline', Colors.deepOrange);
+                },
+              ),
+              SizedBox(width: 16),
+              FlatButton(
+                child: Text('Away', style: TextStyle(color: Colors.white)),
+                color: Colors.yellow[700],
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection(TOKENS_COLLECTION)
+                      .doc(uid)
+                      .update({'status': 1});
+                  Utils.makeToast('Status -> Away', Colors.yellow);
+                },
+              ),
+              SizedBox(width: 16),
+              FlatButton(
+                child: Text('Online', style: TextStyle(color: Colors.white)),
+                color: Colors.green,
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection(TOKENS_COLLECTION)
+                      .doc(uid)
+                      .update({'status': 2});
+                  Utils.makeToast('Status -> Online', Colors.green);
+                },
+              ),
+            ],
+          ),
+          SizedBox(height: 32),
           // Row(
           //   mainAxisAlignment: MainAxisAlignment.spaceAround,
           //   children: [
@@ -163,12 +264,16 @@ class _HomeScreenState extends State<HomeScreen> {
             label: Text('Log Out',
                 style: TextStyle(color: Colors.white, fontSize: 16)),
             icon: Icon(Icons.logout, color: Colors.white),
-            color: Colors.deepOrange,
+            color: Colors.red[600],
             onPressed: () async {
               Box b = await Hive.openBox('myprofile');
               await b.put('myname', '');
-              // b.put('mypassword', '');
               await b.put('myid', '');
+              await FirebaseFirestore.instance
+                  .collection(TOKENS_COLLECTION)
+                  .doc(uid)
+                  .update({'status': 0});
+              // Utils.makeToast('Logging Out', Colors.deepOrange);
               Navigator.pushReplacementNamed(context, '/');
             },
           ),

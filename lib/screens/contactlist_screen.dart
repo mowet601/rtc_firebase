@@ -1,17 +1,23 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:webrtc_test/models/messageModel.dart';
 // import 'package:provider/provider.dart';
 // import 'package:webrtc_test/models/contactModel.dart';
 // import 'package:webrtc_test/models/userProvider.dart';
 import 'package:webrtc_test/screens/chat_screen.dart';
+import 'package:webrtc_test/string_constant.dart';
 import 'package:webrtc_test/utilityMan.dart';
 import 'package:http/http.dart' as http;
 
 import 'custom_tile.dart';
 
 class ContactListScreen extends StatelessWidget {
+  final String myuid;
+  const ContactListScreen({Key key, @required this.myuid}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,11 +62,12 @@ class ContactListScreen extends StatelessWidget {
         style: TextStyle(
             fontSize: 20, color: Colors.blue, fontWeight: FontWeight.bold),
       ),
-      subtitle: Text(
-        '${index + 1}',
-        // contact.email,
-        style: TextStyle(color: Colors.black26, fontSize: 14),
-      ),
+      // subtitle: Text(
+      //   '${index + 1}',
+      //   // contact.email,
+      //   style: TextStyle(color: Colors.black26, fontSize: 14),
+      // ),
+      subtitle: lastMsgDisplay(contact['calleeId']),
       trailing: Text(
         contact['calleeId'],
         style: TextStyle(color: Colors.grey, fontSize: 16),
@@ -78,19 +85,17 @@ class ContactListScreen extends StatelessWidget {
                 isRound: true,
               ),
             ),
-            // TODO : implement online status flagging
-            // Align(
-            //   alignment: Alignment.bottomRight,
-            //   child: Container(
-            //     height: 13,
-            //     width: 13,
-            //     decoration: BoxDecoration(
-            //       shape: BoxShape.circle,
-            //       color:
-            //           Colors.purple,
-            //     ),
-            //   ),
-            // )
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Container(
+                height: 16,
+                width: 16,
+                padding: EdgeInsets.all(2),
+                decoration:
+                    BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                child: onlineDotIndicator(contact['calleeId']),
+              ),
+            )
           ],
         ),
       ),
@@ -142,14 +147,79 @@ class ContactListScreen extends StatelessWidget {
     );
   }
 
+  Widget onlineDotIndicator(String contactuid) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection(TOKENS_COLLECTION)
+          .doc(contactuid)
+          .snapshots(),
+      builder: (context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        List<Color> statusColor = [Colors.red, Colors.yellow, Colors.green];
+
+        if (snapshot.hasData && snapshot.data.data() != null) {
+          int status = snapshot.data.data()['status'];
+          return Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: statusColor[status],
+            ),
+          );
+        } else
+          return Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey,
+            ),
+          );
+      },
+    );
+  }
+
+  Widget lastMsgDisplay(String contactuid) {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance
+          .collection(MESSAGES_COLLECTION)
+          .doc(myuid)
+          .collection(contactuid)
+          .orderBy('timestamp', descending: false)
+          .snapshots(),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasData) {
+          var docList = snapshot.data.docs;
+          if (docList.isNotEmpty) {
+            Message message = Message.fromMap(docList.last.data());
+            return SizedBox(
+              width: MediaQuery.of(context).size.width * 0.6,
+              child: Text(
+                message.message,
+                maxLines: 1,
+                overflow: TextOverflow.fade,
+                style: TextStyle(color: Colors.black38, fontSize: 12),
+              ),
+            );
+          } else
+            return Text(
+              'No messages yet',
+              style: TextStyle(color: Colors.black38, fontSize: 12),
+            );
+        } else
+          return Text(
+            '. . .',
+            style: TextStyle(color: Colors.black26, fontSize: 12),
+          );
+      },
+    );
+  }
+
   Future<List<dynamic>> fetchContacts() async {
     Box box = await Hive.openBox('myprofile');
     String uid = box.get('myid');
     // print('$uid');
 
-    String url = 'https://admin.stellar.care/chat/callee.php';
-    var response = await http
-        .post(url, body: {'userId': '$uid', 'secret': '909856238209123'});
+    var response = await http.post(
+      'https://admin.stellar.care/chat/callee.php',
+      body: {'userId': '$uid', 'secret': '909856238209123'},
+    );
     List<dynamic> jsonContacts = jsonDecode(response.body);
 
     // print('Response Status: ${response.statusCode}');

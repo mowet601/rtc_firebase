@@ -19,11 +19,13 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _otpController = TextEditingController();
-  final _deviceIdController = TextEditingController();
-  final FirebaseMessaging fcm = FirebaseMessaging();
   bool _isLoggingIn = false;
-  // bool isSeniorDevice = false;
   String deviceInfoId = '';
+  final FirebaseMessaging fcm = FirebaseMessaging.instance;
+  Box box;
+
+  // final _deviceIdController = TextEditingController();
+  // bool isSeniorDevice = false;
   // String name = '';
   // String id = '';
   // BuildContext c;
@@ -31,7 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _otpController.dispose();
-    _deviceIdController.dispose();
+    // _deviceIdController.dispose();
     super.dispose();
   }
 
@@ -60,14 +62,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     print('main: Initializing Hivebox');
     Directory dir = await getApplicationDocumentsDirectory();
     Hive.init(dir.path);
-    Box box = await Hive.openBox('myprofile');
+    box = await Hive.openBox('myprofile');
     String name = box.get('myname', defaultValue: '') ?? '';
     String id = box.get('myid', defaultValue: '') ?? '';
-    if (name.isNotEmpty && id.isNotEmpty)
+    if (name.isNotEmpty && id.isNotEmpty) {
+      registerFCM(id);
+      notifCallbackFCM();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
       );
+    }
     print('main initHive: userId: $id userName: $name');
     print('main initHive: deviceId: $deviceInfoId');
   }
@@ -76,7 +81,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // c = context;
     return Container(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
@@ -201,11 +205,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // String did = isSeniorDevice
       //     ? _deviceIdController.text.toLowerCase().trim()
       //     : deviceInfoId;
-      String did = deviceInfoId;
+      // String did = deviceInfoId;
+      String did = '7eee3c714aa425d6';
 
       print('OTP typed: $otp');
       print('DeviceId: $did');
-      // print('DId Length: ${deviceInfoId.length}');
 
       String aflexRegisterUrl = 'https://admin.stellar.care/chat/register.php';
       var response = await http.post(aflexRegisterUrl, body: {
@@ -222,21 +226,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         var jsonobj = jsonDecode(jsonres);
         print(jsonobj);
         if (jsonobj['success'] == 1) {
-          Box b = Hive.box('myprofile');
-          await b.put('myname', jsonobj['userName']);
-          await b.put('myid', jsonobj['userId']);
-          await b.put('mytype', otp == '1234' ? 'Resident' : 'Contact');
+          // Box b = Hive.box('myprofile');
+          await box.put('myname', jsonobj['userName']);
+          await box.put('myid', jsonobj['userId']);
+          await box.put('mytype', otp == '1234' ? 'Resident' : 'Contact');
 
-          if (Platform.isIOS) {
-            fcm.onIosSettingsRegistered.listen(
-              (event) => registerFCM(
-                jsonobj['userId'],
-              ),
-            );
-            fcm.requestNotificationPermissions(
-              IosNotificationSettings(sound: true, badge: true, alert: true),
-            );
-          } else
+          if (Platform.isIOS)
+            fcm
+                .requestPermission()
+                .then((value) => registerFCM(jsonobj['userId']));
+          else
             registerFCM(jsonobj['userId']);
           notifCallbackFCM();
 
@@ -258,39 +257,74 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoggingIn = false);
   }
 
-  void notifCallbackFCM() {
-    fcm.configure(
-      onMessage: (Map<String, dynamic> message) async {
-        print('onNotif $message');
-        var data = message['data'] ?? message;
-        print('on msg data: $data');
-        Utils.makeToast('onMessage: $message', Colors.green);
-      },
-      onResume: (Map<String, dynamic> message) async {
-        print('onNotifResume $message');
-        Utils.makeToast('onResume: $message', Colors.green);
-      },
-      onLaunch: (Map<String, dynamic> message) async {
-        print('onNotifLaunch $message');
-        Utils.makeToast('onLaunch: $message', Colors.green);
-      },
-    );
-  }
-
   registerFCM(String uid) async {
     fcm.subscribeToTopic('all');
     String fcmtoken = await fcm.getToken();
+    String apntoken = await fcm.getAPNSToken();
+    String deviceUid = deviceInfoId;
+
     if (fcmtoken != null) {
       print(fcmtoken);
-      Hive.box('myprofile').put('mytoken', fcmtoken);
+      await box.put('mytoken', fcmtoken);
+      await box.put('deviceid', deviceUid);
       DocumentReference doc =
           FirebaseFirestore.instance.collection(TOKENS_COLLECTION).doc(uid);
       await doc.set({
         'fcmtoken': fcmtoken,
+        'apntoken': apntoken,
         'platform': Platform.operatingSystem,
         'createdon': FieldValue.serverTimestamp(),
+        'deviceuid': deviceUid,
+        'status': 2
       });
       Utils.makeToast('Notifications Activated', Colors.green);
     }
   }
-}
+
+  void notifCallbackFCM() {
+    // ignore: missing_return
+    FirebaseMessaging.onBackgroundMessage((message) {
+      final msgdata = message.data;
+      print('onBackground: $msgdata');
+    });
+    print('notifCallbackFCM done');
+    // fcm.configure(
+    //   onBackgroundMessage: myBackgroundMessageHandler,
+    //   onMessage: (Map<String, dynamic> message) async {
+    //     print('onNotif $message');
+    //     var data = message['data'] ?? message;
+    //     print('on msg data: $data');
+    //     if (data['callername'] != null && data['callername'] != '')
+    //       print('on msg -- callername: ${data['callername']}');
+    //     if (data['type'] != null && data['type'] != '')
+    //       print('on msg -- type: ${data['type']}');
+    //   },
+    //   onResume: (Map<String, dynamic> message) async {
+    //     print('onNotifResume $message');
+    //     // Utils.makeToast('onResume: $message', Colors.green);
+    //   },
+    //   onLaunch: (Map<String, dynamic> message) async {
+    //     print('onNotifLaunch $message');
+    //     // Utils.makeToast('onLaunch: $message', Colors.green);
+    //   },
+    // );
+  }
+
+// top-level backgroundhandler function
+  // static Future<dynamic> myBackgroundMessageHandler(
+  //     Map<String, dynamic> message) async {
+  //   // if (message.containsKey('data')) {
+  //   //   final dynamic data = message['data'];
+  //   // }
+  //   // if (message.containsKey('notification')) {
+  //   //   final dynamic notification = message['notification'];
+  //   // }
+  //   print('onBackgroundNotif $message');
+  //   var data = message['data'] ?? message;
+  //   print('on bg data: $data');
+  //   if (data['callername'] != null && data['callername'] != '')
+  //     print('on bg -- callername: ${data['callername']}');
+  //   if (data['type'] != null && data['type'] != '')
+  //     print('on bg -- type: ${data['type']}');
+  // }
+} // RegisterScreen Class

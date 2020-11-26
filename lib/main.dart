@@ -37,13 +37,9 @@ class _MyAppState extends State<MyApp> {
             builder: (context, snapshot) {
               if (snapshot.hasError) return Text('Fatal Firebase Error');
               if (snapshot.connectionState == ConnectionState.done) {
-                // if (name != null && id != null) {
-                //   print('Hive returned user. goto -> home_screen');
-                //   Navigator.pushReplacementNamed(context, '/home');
-                // }
                 return mainApp();
               }
-              return CircularProgressIndicator();
+              return Center(child: CircularProgressIndicator());
             },
           ),
         ),
@@ -56,9 +52,6 @@ class _MyAppState extends State<MyApp> {
       alignment: Alignment.center,
       child: ListView(
         children: [
-          // child: Column(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
           SizedBox(height: 64),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -70,20 +63,8 @@ class _MyAppState extends State<MyApp> {
           ),
           SizedBox(height: 48),
           RegisterScreen(),
-          // Text(
-          //   'Please Login using your Credentials below',
-          //   // style: TextStyle(fontSize: 22),
-          // ),
-          // LoginScreen(),
         ],
       ),
     );
   }
-
-  // setFakeData() async {
-  //   String fakename = new Faker().person.name();
-  //   // await Firebase.initializeApp();
-  //   await Firestore.instance.collection("users").document().setData(
-  //       {'name': '$fakename', 'time': Timestamp.now().millisecondsSinceEpoch});
-  // }
 }

@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker/emoji_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wakelock/wakelock.dart';
@@ -35,9 +34,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _currentUserId;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  StorageReference _storageRef;
+  Reference _storageRef;
   bool isImageLoading = false;
 
+  //TODO : Optimize packing/unpacking of jsonmap-usermodel
   @override
   void initState() {
     super.initState();
@@ -48,6 +48,7 @@ class _ChatScreenState extends State<ChatScreen> {
       'photoUrl': widget.receiver['photoUrl']
     };
     _receiverUser = StellarUserModel.fromMap(receiverMap);
+
     Hive.openBox('myprofile').then((b) {
       print('chat onHive Init');
       _currentUserId = b.get('myid');
@@ -58,16 +59,18 @@ class _ChatScreenState extends State<ChatScreen> {
             'https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png'
         // TODO : change generic photoUrl to user's own photo
       };
-      // setState(() {
-      _senderUser = StellarUserModel.fromMap(senderMap);
-      // });
       _firestore
           .collection(TOKENS_COLLECTION)
           .doc(_receiverUser.uid)
           .get()
           .then((value) {
-        _receiverUser.fcmtoken = value.data()['fcmtoken'];
-        print('chat on fcmtoken get');
+        var m = value.data();
+        if (m['platform'] == 'ios') _receiverUser.apntoken = m['apntoken'];
+        _receiverUser.fcmtoken = m['fcmtoken'];
+        setState(() {
+          _senderUser = StellarUserModel.fromMap(senderMap);
+        });
+        print('chat onFcmtokenGet');
       });
       print('chat hiveInit done');
     });
@@ -76,7 +79,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // _imageUploadProvider = Provider.of<ImageUploadProvider>(context);
     print('chat build start');
     Wakelock.enabled.then((value) => print('onChat: build wakelock is $value'));
     return PickupLayout(
@@ -126,7 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                 : Container(),
             getChatControls(),
-            // showEmojipicker ? Container(child: emojiContainer()) : Container(),
+            showEmojipicker ? Container(child: emojiContainer()) : Container(),
           ],
         ),
       ),
@@ -192,32 +194,32 @@ class _ChatScreenState extends State<ChatScreen> {
                     fillColor: Colors.white,
                   ),
                 ),
-                // IconButton(
-                //   icon: Icon(
-                //     Icons.insert_emoticon,
-                //     color: Colors.blue,
-                //   ),
-                //   onPressed: () {
-                //     if (!showEmojipicker) {
-                //       hideKeyboard();
-                //       showEmojiCon();
-                //     } else {
-                //       showKeyboard();
-                //       hideEmojiCon();
-                //     }
-                //   },
-                // )
+                IconButton(
+                  icon: Icon(
+                    Icons.insert_emoticon,
+                    color: Colors.blue,
+                  ),
+                  onPressed: () {
+                    if (!showEmojipicker) {
+                      hideKeyboard();
+                      showEmojiCon();
+                    } else {
+                      showKeyboard();
+                      hideEmojiCon();
+                    }
+                  },
+                )
               ],
             ),
           ),
-          SizedBox(width: 10),
+          isWriting ? Container() : SizedBox(width: 10),
           isWriting
               ? Container()
               : GestureDetector(
                   onTap: () => pickImage(ImageSource.gallery),
                   child: Icon(Icons.photo, color: Colors.white),
                 ),
-          SizedBox(width: 10),
+          isWriting ? Container() : SizedBox(width: 10),
           isWriting
               ? Container()
               : GestureDetector(
@@ -225,21 +227,23 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Icon(Icons.camera_alt, color: Colors.white),
                 ),
           isWriting
-              ? Container(
-                  margin: EdgeInsets.only(left: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.send,
-                      size: 24,
-                      color: Colors.blue,
-                    ),
-                    onPressed: () => sendMessage(),
-                  ),
-                )
+              ? _senderUser != null
+                  ? Container(
+                      margin: EdgeInsets.only(left: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.send,
+                          size: 24,
+                          color: Colors.blue,
+                        ),
+                        onPressed: () => sendMessage(),
+                      ),
+                    )
+                  : CircularProgressIndicator()
               : Container(),
           // SizedBox(width: 10),
         ],
@@ -249,7 +253,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget getMessageList() {
     print('onMessageList: $_currentUserId -> ${_receiverUser.uid}');
-    return StreamBuilder(
+    return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection(MESSAGES_COLLECTION)
           .doc(_currentUserId)
@@ -257,11 +261,10 @@ class _ChatScreenState extends State<ChatScreen> {
           .orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.data == null)
+        if (!snapshot.hasData)
           return Center(child: CircularProgressIndicator());
-        print('msg length: ${snapshot.data.docs.length}');
 
-        if (snapshot.data.docs.length < 1) {
+        if (snapshot.data.docs.isEmpty) {
           return Center(
             child: Container(
               // color: Colors.blueGrey,
@@ -281,13 +284,13 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           );
         } else {
-          SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-            _listScrollController.animateTo(
-              _listScrollController.position.minScrollExtent,
-              duration: Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-            );
-          });
+          // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+          //   _listScrollController.animateTo(
+          //     _listScrollController.position.minScrollExtent,
+          //     duration: Duration(milliseconds: 250),
+          //     curve: Curves.easeInOut,
+          //   );
+          // });
           return ListView.builder(
             padding: EdgeInsets.all(10),
             itemCount: snapshot.data.docs.length,
@@ -431,8 +434,10 @@ class _ChatScreenState extends State<ChatScreen> {
       _storageRef = FirebaseStorage.instance
           .ref()
           .child('${DateTime.now().millisecondsSinceEpoch}');
-      StorageUploadTask _storageUploadTask = _storageRef.putFile(image);
-      url = await (await _storageUploadTask.onComplete).ref.getDownloadURL();
+      UploadTask _storageUploadTask = _storageRef.putFile(image);
+      var ts = await _storageUploadTask
+          .whenComplete(() => print('File Upload Complete'));
+      url = await ts.ref.getDownloadURL();
     } catch (e) {
       print('uploadImage2Firebase');
       print(e);

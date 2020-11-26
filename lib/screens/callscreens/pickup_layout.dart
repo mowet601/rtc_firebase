@@ -33,7 +33,6 @@ class _PickupLayoutState extends State<PickupLayout> {
 
   @override
   Widget build(BuildContext context) {
-    // final UserProvider userProvider = Provider.of<UserProvider>(context);
     return userLoaded
         ? StreamBuilder<DocumentSnapshot>(
             stream: callMethods.callStream(uid: uid),

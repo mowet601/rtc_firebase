@@ -3,13 +3,15 @@ class StellarUserModel {
   String name;
   String profilePhoto;
   String fcmtoken;
+  String apntoken;
+  // int status;
+  // String did;
   // bool type; // TRUE -> SENIOR RESIDENT
-  int status;
 
   StellarUserModel({
     this.uid,
     this.name,
-    this.status,
+    // this.status,
     this.fcmtoken,
     this.profilePhoto,
   });
@@ -19,8 +21,9 @@ class StellarUserModel {
     data['userId'] = user.uid;
     data['userName'] = user.name;
     data['photoUrl'] = user.profilePhoto;
-    data['status'] = user.status;
+    // data['status'] = user.status;
     data['fcmtoken'] = user.fcmtoken;
+    data['apntoken'] = user.apntoken;
     return data;
   }
 
@@ -28,7 +31,8 @@ class StellarUserModel {
     this.uid = mapData['userId'];
     this.name = mapData['userName'];
     this.profilePhoto = mapData['photoUrl'];
-    this.status = mapData['status'];
+    // this.status = mapData['status'];
     this.fcmtoken = mapData['fcmtoken'];
+    this.apntoken = mapData['apntoken'];
   }
 }
