@@ -1,23 +1,16 @@
 {
   "images" : [
     {
-      "filename" : "applogo3-1.png",
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "filename" : "applogo3.png",
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "filename" : "applogo3-2.png",
-      "idiom" : "universal",
-      "scale" : "3x"
+      "filename" : "uvue_lock.png",
+      "idiom" : "universal"
     }
   ],
   "info" : {
     "author" : "xcode",
     "version" : 1
+  },
+  "properties" : {
+    "auto-scaling" : "auto",
+    "preserves-vector-representation" : true
   }
 }
