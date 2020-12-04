@@ -3,13 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker/emoji_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:webrtc_test/models/messageModel.dart';
 import 'package:webrtc_test/models/stellarUserModel.dart';
 // import 'package:webrtc_test/models/userModel.dart';
-import 'package:webrtc_test/screens/callscreens/call_utilities.dart';
+import 'package:webrtc_test/comms_utilities.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 import 'package:webrtc_test/string_constant.dart';
 import '../utilityMan.dart';
@@ -52,21 +53,22 @@ class _ChatScreenState extends State<ChatScreen> {
     Hive.openBox('myprofile').then((b) {
       print('chat onHive Init');
       _currentUserId = b.get('myid');
-      Map<String, dynamic> senderMap = {
-        'userId': _currentUserId,
-        'userName': b.get('myname'),
-        'photoUrl':
-            'https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png'
-        // TODO : change generic photoUrl to user's own photo
-      };
       _firestore
           .collection(TOKENS_COLLECTION)
           .doc(_receiverUser.uid)
           .get()
           .then((value) {
         var m = value.data();
-        if (m['platform'] == 'ios') _receiverUser.apntoken = m['apntoken'];
+        _receiverUser.apntoken = m['apntoken'];
         _receiverUser.fcmtoken = m['fcmtoken'];
+
+        Map<String, dynamic> senderMap = {
+          'userId': _currentUserId,
+          'userName': b.get('myname'),
+          'photoUrl':
+              'https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png'
+          // TODO : change generic photoUrl to user's own photo
+        };
         setState(() {
           _senderUser = StellarUserModel.fromMap(senderMap);
         });
@@ -86,7 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => navigator.pop(context),
           ),
           title: Row(
             children: [
@@ -112,8 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
           backgroundColor: Colors.orangeAccent,
           onPressed: () async =>
               await MyPermissions.isCameraAndMicPermissionsGranted()
-                  ? CallUtils.dial(
-                      from: _senderUser, to: _receiverUser, context: context)
+                  ? CommsUtils.dial(from: _senderUser, to: _receiverUser)
                   : Utils.makeToast('Permissions not granted to make call',
                       Colors.deepOrange),
         ),
@@ -399,7 +400,7 @@ class _ChatScreenState extends State<ChatScreen> {
         .collection(message.senderId)
         .add(map);
 
-    CallUtils.sendChatMsgNotification(
+    CommsUtils.sendChatMsgNotification(
         _senderUser.name, _receiverUser.fcmtoken, text);
   }
 

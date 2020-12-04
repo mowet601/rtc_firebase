@@ -5,6 +5,7 @@ import 'package:agora_rtc_engine/rtc_remote_view.dart' as RtcRemoteView;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 // import 'package:provider/provider.dart';
 import 'package:wakelock/wakelock.dart';
@@ -137,7 +138,7 @@ class _CallScreenState extends State<CallScreen> {
           switch (ds.data()) {
             case null:
               print('post null');
-              Navigator.pop(context);
+              navigator.pop();
               break;
             default:
               print('post default');

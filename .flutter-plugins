@@ -12,6 +12,7 @@ firebase_messaging=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.da
 firebase_storage=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_storage-5.1.0/
 firebase_storage_web=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_storage_web-0.1.1/
 flutter_ios_voip_kit=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_ios_voip_kit-0.0.5/
+flutter_local_notifications=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_local_notifications-3.0.1+7/
 flutter_plugin_android_lifecycle=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_plugin_android_lifecycle-1.0.11/
 fluttertoast=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.dartlang.org/fluttertoast-7.1.1/
 image_picker=/Users/jakfromspace/Devtools/flutter/.pub-cache/hosted/pub.dartlang.org/image_picker-0.6.7+12/

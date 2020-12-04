@@ -1,6 +1,8 @@
 lib/models/agoraConfig.dart
 android/app/google-services.json
 ios/GoogleService-Info.plist
+functions/*.p8
+functions/voip_services.pem
 
 # Miscellaneous
 *.class

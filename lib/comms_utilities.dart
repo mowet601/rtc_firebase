@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -17,14 +18,15 @@ import 'package:webrtc_test/screens/callscreens/call_screen.dart';
 import 'package:webrtc_test/string_constant.dart';
 import 'package:webrtc_test/utilityMan.dart';
 
-class CallUtils {
+class CommsUtils {
   static final CallMethods callMethods = CallMethods();
 
-  static dial({StellarUserModel from, StellarUserModel to, context}) async {
+  static dial({StellarUserModel from, StellarUserModel to}) async {
     String newChannelId =
         '${from.uid}-${to.uid}-${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}';
     print('CallMethods: newChannel $newChannelId created');
-    print('CallMethods: ReceiverFCMToken: ${from.fcmtoken}');
+    // print('CallMethodsReceiver: FCM: ${from.fcmtoken} APN: ${from.apntoken}');
+
     CallModel call = CallModel(
       callerId: from.uid,
       callerName: from.name,
@@ -50,18 +52,14 @@ class CallUtils {
 
     if (callMade) {
       HiveStore.addLogs(log);
-      sendCallNotification(from.name, to.fcmtoken);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CallScreen(call: call),
-        ),
-      );
+      sendCallNotification(from.uid, from.name, to.fcmtoken, to.apntoken);
+      Get.to(CallScreen(call: call));
     }
   }
 
-  static sendCallNotification(
-      String callerid, String callername, String calleetoken) async {
+  static sendCallNotification(String callerid, String callername,
+      String calleetoken, String calleetokenapn) async {
+    print('$calleetoken - $calleetokenapn');
     if (calleetoken == null) {
       Utils.makeToast('onCallUtils.Dial : FCM Token is Null', Colors.red);
       return;
@@ -69,6 +67,7 @@ class CallUtils {
     FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
     await firebaseMessaging.requestPermission();
 
+    // FCM NOTIF
     http.Response response = await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
@@ -78,8 +77,8 @@ class CallUtils {
       body: jsonEncode(
         <String, dynamic>{
           'notification': <String, dynamic>{
+            'title': '$callername called you',
             'body': 'Tap here to open uVue app',
-            'title': '$callername is calling you'
           },
           'priority': 'high',
           'data': <String, dynamic>{
@@ -92,18 +91,26 @@ class CallUtils {
         },
       ),
     );
+    print('onNotifSend FCM status: ${response.statusCode}');
 
-    // TODO : Change to real Cloud Function API Endpoint
-    http.Response response2 = await http.post(
-        'https://us-central1-<project-id>.cloudfunctions.net/date',
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(<String, dynamic>{
-          'callerid': '$callerid',
-          'callername': '$callername',
-          'calleetoken': calleetoken
-        }));
-
-    print('onNotifSend: staus: ${response.statusCode}');
+    // VOIP APN PUSH
+    if (calleetokenapn != null) {
+      print('onNotifSend APN prerequest');
+      http
+          .post(
+              'https://us-central1-agedcare-uvue-videochat.cloudfunctions.net/apncallpush',
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(<String, dynamic>{
+                'callerid': '$callerid',
+                'callername': '$callername',
+                'calleetoken': '$calleetokenapn'
+              }))
+          .then((response) {
+        print(
+            'onNotifSend APN status: ${response.statusCode} ${response.headers}');
+        return;
+      });
+    }
   }
 
   static sendChatMsgNotification(
@@ -116,25 +123,17 @@ class CallUtils {
     await firebaseMessaging.requestPermission();
 
     if (chatmsg.length > 30) chatmsg = chatmsg.substring(0, 31);
-    String jsonReq = jsonEncode(
-      <String, dynamic>{
-        'notification': <String, dynamic>{
-          'title': '$callername messaged you',
-          'body': '$chatmsg'
-        },
-        'priority': 'high',
-        'data': <String, dynamic>{
-          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-          'id': '1',
-          'status': 'done'
-        },
-        'to': calleetoken,
-      },
-    );
+
+    String jsonReq = jsonEncode({
+      'notification': {'title': '$callername messaged you', 'body': '$chatmsg'},
+      'priority': 'high',
+      'data': {'click_action': 'FLUTTER_NOTIFICATION_CLICK'},
+      'to': calleetoken,
+    });
 
     http.Response response = await http.post(
       'https://fcm.googleapis.com/fcm/send',
-      headers: <String, String>{
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': 'key=$FCM_SERVER_TOKEN',
       },

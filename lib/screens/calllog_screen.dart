@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/logModel.dart';
 import 'package:webrtc_test/screens/custom_tile.dart';
@@ -70,7 +71,7 @@ class _LogListContainerState extends State<LogListContainer> {
                                 FlatButton(
                                   child: Text('Yes'),
                                   onPressed: () async {
-                                    Navigator.maybePop(context);
+                                    navigator.maybePop(context);
                                     await HiveStore.deleteLogs(i);
                                     if (mounted) {
                                       setState(() {});
@@ -79,7 +80,7 @@ class _LogListContainerState extends State<LogListContainer> {
                                 ),
                                 FlatButton(
                                   child: Text('No'),
-                                  onPressed: () => Navigator.maybePop(context),
+                                  onPressed: () => navigator.maybePop(context),
                                 )
                               ],
                             )),

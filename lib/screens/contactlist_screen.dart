@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:webrtc_test/models/messageModel.dart';
 // import 'package:provider/provider.dart';
@@ -50,12 +51,7 @@ class ContactListScreen extends StatelessWidget {
     return CustomTile(
       mini: false,
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatScreen(receiver: contact),
-          ),
-        );
+        Get.to(ChatScreen(receiver: contact));
       },
       title: Text(
         contact['calleeName'],

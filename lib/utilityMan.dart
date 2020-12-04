@@ -17,7 +17,7 @@ class Utils {
         msg: messageStr,
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 2,
+        timeInSecForIosWeb: 3,
         backgroundColor: color,
         textColor: Colors.white,
         fontSize: 16.0);

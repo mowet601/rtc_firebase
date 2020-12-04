@@ -5,6 +5,8 @@ import 'package:device_info/device_info.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_ios_voip_kit/flutter_ios_voip_kit.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:webrtc_test/string_constant.dart';
@@ -54,6 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             deviceInfoId = value.androidId;
           });
         });
+
       initHive();
     });
   }
@@ -66,10 +69,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String name = box.get('myname', defaultValue: '') ?? '';
     String id = box.get('myid', defaultValue: '') ?? '';
     if (name.isNotEmpty && id.isNotEmpty) {
-      registerFCM(id);
-      notifCallbackFCM();
-      Navigator.pushReplacement(
-        context,
+      registerPushNotifs(id);
+      navigator.pushReplacement(
         MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     }
@@ -231,21 +232,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
           await box.put('myid', jsonobj['userId']);
           await box.put('mytype', otp == '1234' ? 'Resident' : 'Contact');
 
-          if (Platform.isIOS)
-            fcm
-                .requestPermission()
-                .then((value) => registerFCM(jsonobj['userId']));
-          else
-            registerFCM(jsonobj['userId']);
-          notifCallbackFCM();
+          if (Platform.isIOS) {
+            await fcm.requestPermission();
+            registerPushNotifs(jsonobj['userId']);
+            print('fcm reqpermission');
+          } else
+            registerPushNotifs(jsonobj['userId']);
+          // notifCallbackFCM();
 
-          Navigator.pushReplacement(
-            context,
+          navigator.pushReplacement(
             MaterialPageRoute(builder: (context) => HomeScreen()),
           );
         } else {
           print('invalid otp code');
-          Utils.makeToast('Invalid Code', Colors.deepOrange);
+          Utils.makeToast(
+              'Invalid Code. Please contact uVue admin', Colors.deepOrange);
         }
       } else {
         print('no json response returned');
@@ -254,77 +255,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else
       Utils.makeToast(
           'Cannot Register without Code or Device Id', Colors.deepOrange);
+
+    //
     setState(() => _isLoggingIn = false);
   }
 
-  registerFCM(String uid) async {
+  void registerPushNotifs(String uid) async {
     fcm.subscribeToTopic('all');
     String fcmtoken = await fcm.getToken();
-    String apntoken = await fcm.getAPNSToken();
+    String voiptoken;
+    // String apntoken = await fcm.getAPNSToken();
+    if (Platform.isIOS) {
+      var voipkit = FlutterIOSVoIPKit.instance;
+      bool b = await voipkit.requestAuthLocalNotification();
+      print('fivk reqAuth granted? $b');
+      if (!b)
+        Utils.makeToast('Please ALLOW notifications so the app can get CALLS',
+            Colors.deepOrange);
+      voiptoken = await voipkit.getVoIPToken();
+      voipkit.onDidAcceptIncomingCall(voiptoken, '');
+      voipkit.endCall();
+    }
     String deviceUid = deviceInfoId;
 
     if (fcmtoken != null) {
-      print(fcmtoken);
-      await box.put('mytoken', fcmtoken);
       await box.put('deviceid', deviceUid);
       DocumentReference doc =
           FirebaseFirestore.instance.collection(TOKENS_COLLECTION).doc(uid);
       await doc.set({
         'fcmtoken': fcmtoken,
-        'apntoken': apntoken,
+        'apntoken': voiptoken,
         'platform': Platform.operatingSystem,
         'createdon': FieldValue.serverTimestamp(),
         'deviceuid': deviceUid,
         'status': 2
       });
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
+
       Utils.makeToast('Notifications Activated', Colors.green);
-    }
+    } else
+      Utils.makeToast('FcmToken was null onRegisterPush.', Colors.deepOrange);
   }
-
-  void notifCallbackFCM() {
-    // ignore: missing_return
-    FirebaseMessaging.onBackgroundMessage((message) {
-      final msgdata = message.data;
-      print('onBackground: $msgdata');
-    });
-    print('notifCallbackFCM done');
-    // fcm.configure(
-    //   onBackgroundMessage: myBackgroundMessageHandler,
-    //   onMessage: (Map<String, dynamic> message) async {
-    //     print('onNotif $message');
-    //     var data = message['data'] ?? message;
-    //     print('on msg data: $data');
-    //     if (data['callername'] != null && data['callername'] != '')
-    //       print('on msg -- callername: ${data['callername']}');
-    //     if (data['type'] != null && data['type'] != '')
-    //       print('on msg -- type: ${data['type']}');
-    //   },
-    //   onResume: (Map<String, dynamic> message) async {
-    //     print('onNotifResume $message');
-    //     // Utils.makeToast('onResume: $message', Colors.green);
-    //   },
-    //   onLaunch: (Map<String, dynamic> message) async {
-    //     print('onNotifLaunch $message');
-    //     // Utils.makeToast('onLaunch: $message', Colors.green);
-    //   },
-    // );
-  }
-
-// top-level backgroundhandler function
-  // static Future<dynamic> myBackgroundMessageHandler(
-  //     Map<String, dynamic> message) async {
-  //   // if (message.containsKey('data')) {
-  //   //   final dynamic data = message['data'];
-  //   // }
-  //   // if (message.containsKey('notification')) {
-  //   //   final dynamic notification = message['notification'];
-  //   // }
-  //   print('onBackgroundNotif $message');
-  //   var data = message['data'] ?? message;
-  //   print('on bg data: $data');
-  //   if (data['callername'] != null && data['callername'] != '')
-  //     print('on bg -- callername: ${data['callername']}');
-  //   if (data['type'] != null && data['type'] != '')
-  //     print('on bg -- type: ${data['type']}');
-  // }
 } // RegisterScreen Class
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  print('Handling a background message: ${message.messageId}');
+  print('Data: ${message.data}');
+  if (message.data['type'] != 'call') {
+    print('background call');
+    navigator.pushNamed('/home');
+  } else
+    print('BackgroundMsgHandler message data null');
+}

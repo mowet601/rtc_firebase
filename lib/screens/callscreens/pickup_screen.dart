@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:webrtc_test/call_methods.dart';
 import 'package:webrtc_test/models/callModel.dart';
 import 'package:webrtc_test/models/hive_db.dart';
 import 'package:webrtc_test/models/logModel.dart';
-import 'package:webrtc_test/screens/callscreens/call_utilities.dart';
+import 'package:webrtc_test/comms_utilities.dart';
 import 'package:webrtc_test/string_constant.dart';
 import 'package:webrtc_test/utilityMan.dart';
 import 'package:assets_audio_player/assets_audio_player.dart';
@@ -107,13 +108,7 @@ class _PickupScreenState extends State<PickupScreen> {
                             .isCameraAndMicPermissionsGranted()) {
                           // FlutterRingtonePlayer.stop();
                           assetsAudioPlayer.stop();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CallScreen(call: widget.call),
-                            ),
-                          );
+                          Get.to(CallScreen(call: widget.call));
                           // p.stop();
                           // audioPlayer.clearCache();
                         } else

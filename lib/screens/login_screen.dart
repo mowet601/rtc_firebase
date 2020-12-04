@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:webrtc_test/string_constant.dart';
@@ -162,10 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
           b.put('mypassword', p);
           b.put('myuid', query.docs.first.get('uid'));
           Utils.makeToast('Signed in Successfully', Colors.green);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-          );
+          Get.to(HomeScreen());
         } else {
           Utils.makeToast('Wrong Password! Try again.', Colors.deepOrange);
         }

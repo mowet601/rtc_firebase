@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ios_voip_kit/flutter_ios_voip_kit.dart';
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:webrtc_test/models/hive_db.dart';
-import 'package:webrtc_test/screens/log_screen.dart';
+import 'package:webrtc_test/screens/calllog_screen.dart';
 import 'package:webrtc_test/screens/callscreens/pickup_layout.dart';
 import 'package:webrtc_test/screens/contactlist_screen.dart';
 import 'package:webrtc_test/string_constant.dart';
@@ -62,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 .doc(uid)
                 .update({'status': 2})
             : print('app resumed');
+        if (Platform.isIOS) FlutterIOSVoIPKit.instance.endCall();
         break;
       case AppLifecycleState.inactive:
         uid != null
@@ -70,6 +75,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 .doc(uid)
                 .update({'status': 0})
             : print('app closed');
+        if (Platform.isIOS) FlutterIOSVoIPKit.instance.endCall();
         break;
       case AppLifecycleState.paused:
         uid != null
@@ -78,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 .doc(uid)
                 .update({'status': 1})
             : print('app paused');
+        if (Platform.isIOS) FlutterIOSVoIPKit.instance.endCall();
         break;
       case AppLifecycleState.detached:
         uid != null
@@ -274,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   .doc(uid)
                   .update({'status': 0});
               // Utils.makeToast('Logging Out', Colors.deepOrange);
-              Navigator.pushReplacementNamed(context, '/');
+              navigator.pushReplacementNamed('/');
             },
           ),
           SizedBox(height: 8),
@@ -286,18 +293,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               style: TextStyle(color: Colors.amber, fontSize: 12),
             ),
           )
-          // SizedBox(height: 8),
-          // FlatButton.icon(
-          //   label: Text('StellarContacts',
-          //       style: TextStyle(color: Colors.white)),
-          //   icon: Icon(Icons.table_view, color: Colors.white),
-          //   color: Colors.purple,
-          //   onPressed: () {
-          //     Navigator.pushNamed(context, '/stellarcontacts');
-          //   },
-          // )
-          //   ],
-          // ),
         ],
       ),
     );

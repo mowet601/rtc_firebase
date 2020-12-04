@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as apn from '@parse/node-apn';
+import { uuid } from 'uuidv4';
 
 admin.initializeApp();
 
@@ -17,15 +18,15 @@ export const cleanupCallDocs = functions.https.onRequest(async (req, res) => {
     const calldocs: string[] = [];
     if (!querySnapshot.empty) {
         querySnapshot.forEach((doc) => {
-            var time = doc.createTime.seconds;
-            var time2 = doc.readTime.seconds;
-            var diff = time2 - time;
+            const time = doc.createTime.seconds;
+            const time2 = doc.readTime.seconds;
+            const diff = time2 - time;
             if (diff > 21600) {
                 calldocs.push(doc.id);
             }
         });
         if (calldocs.length > 0) {
-            var html = '<h1>Call Docs Cleaned Up</h1>';
+            let html = '<h1>Call Docs Cleaned Up</h1>';
             calldocs.forEach(async (e) => {
                 console.log('cleaned: ' + e);
                 html += '<p>' + e + '</p>';
@@ -49,7 +50,7 @@ export const ongoingCalls = functions.https.onRequest(async (req, res) => {
             calldocs.push(doc);
         });
         if (calldocs.length > 0) {
-            var html = '<h1>Ongoing Calls</h1>';
+            let html = '<h1>Ongoing Calls</h1>';
             calldocs.forEach((e) => {
                 console.log('> ' + e.id + e.data()['channel_id'] + e.data()['timestamp']);
                 html += '<p>' + e.data()['channel_id'] + ' > ' + e.data()['timestamp'] + '</p>';
@@ -63,42 +64,59 @@ export const ongoingCalls = functions.https.onRequest(async (req, res) => {
     else res.send('query empty');
 });
 
-var options = {
+const options = {
     token: {
-        key: "./AuthKey_2AFRPJJGR9.p8",
+        key: __dirname + "/../AuthKey_2AFRPJJGR9.p8",
         keyId: "2AFRPJJGR9",
-        teamId: "RZ5HK969KG"
+        teamId: "RZ5HK969KG",
     },
-    production: true
+    cert: __dirname + "/../voip_services.pem",
+    production: false,
 };
-var apnProvider = new apn.Provider(options);
+const apnProvider = new apn.Provider(options);
 
 export const apncallpush = functions.https.onRequest(async (req, res) => {
-    functions.logger.info('APN Call Push has been initiated');
-    var callerid = req.body.callerid;
-    var callername = req.body.callername;
-    // var calleruuid = req.body.calleruuid;
-    var callertoken = req.body.calleetoken;
+    const callerid: string = req.body.callerid;
+    const callername: string = req.body.callername;
+    const callertoken: string = req.body.calleetoken;
+    const calluuid: string = uuid();
+    // let calleruuid = req.body.calleruuid;
 
-    var note = new apn.Notification();
-    let deviceToken = `${callertoken}`
+    console.log(`CallerID: ${callerid}, CallerName: ${callername}, CallerAPNToken: ${callertoken}`);
 
-    // TODO : Replace uuid with actual real user's device uuid
+    const note = new apn.Notification();
+    const deviceToken = `${callertoken}`
+
     note.rawPayload = {
         "aps": {
+            "content-available": 1,
             "alert": {
-                "uuid": `f579cc8c-7127-4ca3-a9f5-dd4a591a2567`,
-                "incoming_caller_id": `${callerid}`,
-                "incoming_caller_name": `${callername}`,
-            }
-        }
+                "uuid": calluuid,
+                "incoming_caller_id": callerid,
+                "incoming_caller_name": callername,
+            },
+        },
     };
+    note.expiry = Math.floor(Date.now() / 1000) + 60;
     note.pushType = "voip";
     note.topic = "com.stellarvision.uvuevideochat.voip";
 
     apnProvider.send(note, deviceToken).then((result) => {
-        var r = `DONE! notifs sent: ${result.sent.length} failed: ${result.failed.length}`;
-        console.log(r);
-        res.send({ msg: r });
+        const r = `PushNotifsSent: ${result.sent.length}, pushesfailed: ${result.failed.length}`;
+        // console.log(r);
+        let a: string[] = [];
+        result.failed.forEach(e => {
+            if (e.response !== null) {
+                a.push(`${e.status}: ${e.response?.reason} - ${e.device}`);
+            }
+            else {
+                a.push(`did: ${e.device} error: ${e.error?.name} errmsg: ${e.error?.message}\n${e.error?.stack}`);
+            }
+        });
+        console.log({ msg: r, success: result.sent.length, failed: a });
+        res.send({ msg: r, success: result.sent.length, failed: a });
+    }).catch(() => {
+        console.log('NOPE notif not sent');
+        res.send({ msg: 'Error: Notif not sent' })
     });
 });

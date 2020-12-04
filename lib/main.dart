@@ -1,14 +1,10 @@
 // import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-// import 'package:hive/hive.dart';
-// import 'package:path_provider/path_provider.dart';
-// import 'package:provider/provider.dart';
-// import 'package:webrtc_test/models/userProvider.dart';
+import 'package:get/get.dart';
 import 'package:webrtc_test/screens/home_screen.dart';
 import 'package:webrtc_test/screens/register_screen.dart';
-import 'package:webrtc_test/screens/search_screen.dart';
-import 'package:webrtc_test/screens/stellarcontacts_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,15 +16,13 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Stellar AC VideoCalls',
-      debugShowCheckedModeBanner: false,
+    return GetMaterialApp(
+      navigatorKey: Get.key,
       initialRoute: '/',
       routes: {
         '/home': (context) => HomeScreen(),
-        '/search': (context) => SearchScreen(),
-        '/stellarcontacts': (context) => StellarContactsList()
       },
+      title: 'Stellar AC VideoCalls',
       home: Scaffold(
         appBar: AppBar(title: Text('uVue Videochat')),
         body: Container(
@@ -37,7 +31,7 @@ class _MyAppState extends State<MyApp> {
             builder: (context, snapshot) {
               if (snapshot.hasError) return Text('Fatal Firebase Error');
               if (snapshot.connectionState == ConnectionState.done) {
-                return mainApp();
+                return landingScreen();
               }
               return Center(child: CircularProgressIndicator());
             },
@@ -47,7 +41,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Widget mainApp() {
+  Widget landingScreen() {
     return Container(
       alignment: Alignment.center,
       child: ListView(
