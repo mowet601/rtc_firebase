@@ -66,7 +66,6 @@ class CommsUtils {
     }
     FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
     await firebaseMessaging.requestPermission();
-
     // FCM NOTIF
     http.Response response = await http.post(
       'https://fcm.googleapis.com/fcm/send',
@@ -81,7 +80,7 @@ class CommsUtils {
             'body': 'Tap here to open uVue app',
           },
           'priority': 'high',
-          'data': <String, dynamic>{
+          'data': {
             'click_action': 'FLUTTER_NOTIFICATION_CLICK',
             'callerid': '$callerid',
             'type': 'call',
@@ -92,7 +91,6 @@ class CommsUtils {
       ),
     );
     print('onNotifSend FCM status: ${response.statusCode}');
-
     // VOIP APN PUSH
     if (calleetokenapn != null) {
       print('onNotifSend APN prerequest');
@@ -121,26 +119,27 @@ class CommsUtils {
     }
     FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
     await firebaseMessaging.requestPermission();
-
     if (chatmsg.length > 30) chatmsg = chatmsg.substring(0, 31);
+    http.Response response =
+        await http.post('https://fcm.googleapis.com/fcm/send',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'key=$FCM_SERVER_TOKEN',
+            },
+            body: jsonEncode({
+              'notification': {
+                'title': '$callername messaged you',
+                'body': '$chatmsg'
+              },
+              'priority': 'high',
+              'data': {
+                'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+                'type': 'chatmsg',
+              },
+              'to': calleetoken,
+            }));
 
-    String jsonReq = jsonEncode({
-      'notification': {'title': '$callername messaged you', 'body': '$chatmsg'},
-      'priority': 'high',
-      'data': {'click_action': 'FLUTTER_NOTIFICATION_CLICK'},
-      'to': calleetoken,
-    });
-
-    http.Response response = await http.post(
-      'https://fcm.googleapis.com/fcm/send',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'key=$FCM_SERVER_TOKEN',
-      },
-      body: jsonReq,
-    );
-
-    print('onNotifSend done: ${response.statusCode}\n$jsonReq');
+    print('onNotifSend done: ${response.statusCode}');
   }
 }
 

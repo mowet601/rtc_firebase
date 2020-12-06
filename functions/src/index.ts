@@ -71,7 +71,7 @@ const options = {
         teamId: "RZ5HK969KG",
     },
     cert: __dirname + "/../voip_services.pem",
-    production: false,
+    production: true,
 };
 const apnProvider = new apn.Provider(options);
 

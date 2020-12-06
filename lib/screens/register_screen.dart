@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ios_voip_kit/flutter_ios_voip_kit.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -41,6 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void initState() {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     super.initState();
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -232,14 +234,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           await box.put('myid', jsonobj['userId']);
           await box.put('mytype', otp == '1234' ? 'Resident' : 'Contact');
 
-          if (Platform.isIOS) {
-            await fcm.requestPermission();
-            registerPushNotifs(jsonobj['userId']);
-            print('fcm reqpermission');
-          } else
-            registerPushNotifs(jsonobj['userId']);
-          // notifCallbackFCM();
+          if (Platform.isIOS) await fcm.requestPermission();
+          registerPushNotifs(jsonobj['userId']);
 
+          Utils.makeToast('Signed in Successfully', Colors.green);
           navigator.pushReplacement(
             MaterialPageRoute(builder: (context) => HomeScreen()),
           );
@@ -273,39 +271,73 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Utils.makeToast('Please ALLOW notifications so the app can get CALLS',
             Colors.deepOrange);
       voiptoken = await voipkit.getVoIPToken();
-      voipkit.onDidAcceptIncomingCall(voiptoken, '');
+      Utils.makeToast('voiptoken: $voiptoken', Colors.blue);
       voipkit.endCall();
+    } else if (Platform.isAndroid) {
+      FlutterLocalNotificationsPlugin flutLocalNotifs =
+          FlutterLocalNotificationsPlugin();
+      const AndroidInitializationSettings initSettsAndroid =
+          AndroidInitializationSettings('applogo3');
+      final InitializationSettings initsettings =
+          InitializationSettings(android: initSettsAndroid);
+      await flutLocalNotifs.initialize(initsettings,
+          onSelectNotification: onLocalNotifCallback);
     }
-    String deviceUid = deviceInfoId;
 
-    if (fcmtoken != null) {
-      await box.put('deviceid', deviceUid);
-      DocumentReference doc =
-          FirebaseFirestore.instance.collection(TOKENS_COLLECTION).doc(uid);
-      await doc.set({
-        'fcmtoken': fcmtoken,
-        'apntoken': voiptoken,
-        'platform': Platform.operatingSystem,
-        'createdon': FieldValue.serverTimestamp(),
-        'deviceuid': deviceUid,
-        'status': 2
-      });
-      FirebaseMessaging.onBackgroundMessage(
-          _firebaseMessagingBackgroundHandler);
+    Utils.makeToast(
+        'FCM:${fcmtoken != null} APN:${voiptoken != null}', Colors.blue);
 
+    await box.put('deviceid', deviceInfoId);
+    DocumentReference doc =
+        FirebaseFirestore.instance.collection(TOKENS_COLLECTION).doc(uid);
+    await doc.set({
+      'fcmtoken': fcmtoken,
+      'apntoken': voiptoken,
+      'platform': Platform.operatingSystem,
+      'createdon': FieldValue.serverTimestamp(),
+      'deviceuid': deviceInfoId,
+      'status': 2
+    });
+
+    if (fcmtoken != null)
       Utils.makeToast('Notifications Activated', Colors.green);
-    } else
+    else
       Utils.makeToast('FcmToken was null onRegisterPush.', Colors.deepOrange);
+  }
+
+  Future onLocalNotifCallback(String payload) async {
+    print('onLocalNotifCallback');
+    if (payload != null) print('onLocalNotifCallback payload: $payload');
+    // navigator.pushNamed('/home');
   }
 } // RegisterScreen Class
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
-  print('Handling a background message: ${message.messageId}');
-  print('Data: ${message.data}');
-  if (message.data['type'] != 'call') {
-    print('background call');
-    navigator.pushNamed('/home');
+  print('onBackgroundMsgHandler: msgid ${message.messageId}');
+  print('onBackgroundMsgHandler Data: \n${message.data}');
+  if (message.data['type'] == 'call') {
+    print('onBackgroundMsgHandler: call arrived');
+    // navigator.pushNamed('/home');
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'default_notification_channel_id',
+        'default',
+        'default',
+        importance: Importance.max,
+        priority: Priority.high,
+        fullScreenIntent: true,
+        playSound: true,
+      ),
+    );
+    await FlutterLocalNotificationsPlugin().show(
+      int.parse(message.data['callerid'].toString().split('-')[1]),
+      '${message.data['callername']} is calling you!',
+      'Tap to open uVue App and receive the videocall',
+      platformChannelSpecifics,
+      payload: jsonEncode(message.data),
+    );
+    print('onBackgroundMsgHandler: localnotif sent');
   } else
-    print('BackgroundMsgHandler message data null');
+    print('BackgroundMsgHandler: message data null');
 }

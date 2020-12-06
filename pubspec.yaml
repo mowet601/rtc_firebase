@@ -2,7 +2,7 @@ name: webrtc_test
 description: Flutter Video Calling using WebRTC and Firebase.
 
 publish_to: 'none'
-version: 1.0.2+2
+version: 1.0.3+1
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
