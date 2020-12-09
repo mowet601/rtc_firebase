@@ -1,3 +1,9 @@
+const String UVUE_REGISTER_URL = 'https://admin.stellar.care/chat/register.php';
+const String UVUE_CALLEELIST_URL = 'https://admin.stellar.care/chat/callee.php';
+const String FCM_SENDNOTIF_URL = 'https://fcm.googleapis.com/fcm/send';
+const String APN_SENDCALLPUSH_URL =
+    'https://us-central1-agedcare-uvue-videochat.cloudfunctions.net/apncallpush';
+
 const String USERS_COLLECTION = 'users';
 const String MESSAGES_COLLECTION = 'messages';
 const String CALL_COLLECTION = 'calls';

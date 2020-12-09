@@ -212,10 +212,8 @@ class ContactListScreen extends StatelessWidget {
     String uid = box.get('myid');
     // print('$uid');
 
-    var response = await http.post(
-      'https://admin.stellar.care/chat/callee.php',
-      body: {'userId': '$uid', 'secret': '909856238209123'},
-    );
+    var response = await http.post(UVUE_CALLEELIST_URL,
+        body: {'userId': '$uid', 'secret': '909856238209123'});
     List<dynamic> jsonContacts = jsonDecode(response.body);
 
     // print('Response Status: ${response.statusCode}');

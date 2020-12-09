@@ -68,7 +68,7 @@ class CommsUtils {
     await firebaseMessaging.requestPermission();
     // FCM NOTIF
     http.Response response = await http.post(
-      'https://fcm.googleapis.com/fcm/send',
+      FCM_SENDNOTIF_URL,
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': 'key=$FCM_SERVER_TOKEN'
@@ -95,8 +95,7 @@ class CommsUtils {
     if (calleetokenapn != null) {
       print('onNotifSend APN prerequest');
       http
-          .post(
-              'https://us-central1-agedcare-uvue-videochat.cloudfunctions.net/apncallpush',
+          .post(APN_SENDCALLPUSH_URL,
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode(<String, dynamic>{
                 'callerid': '$callerid',
@@ -120,24 +119,23 @@ class CommsUtils {
     FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
     await firebaseMessaging.requestPermission();
     if (chatmsg.length > 30) chatmsg = chatmsg.substring(0, 31);
-    http.Response response =
-        await http.post('https://fcm.googleapis.com/fcm/send',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'key=$FCM_SERVER_TOKEN',
-            },
-            body: jsonEncode({
-              'notification': {
-                'title': '$callername messaged you',
-                'body': '$chatmsg'
-              },
-              'priority': 'high',
-              'data': {
-                'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-                'type': 'chatmsg',
-              },
-              'to': calleetoken,
-            }));
+    http.Response response = await http.post(FCM_SENDNOTIF_URL,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'key=$FCM_SERVER_TOKEN',
+        },
+        body: jsonEncode({
+          'notification': {
+            'title': '$callername messaged you',
+            'body': '$chatmsg'
+          },
+          'priority': 'high',
+          'data': {
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'type': 'chatmsg',
+          },
+          'to': calleetoken,
+        }));
 
     print('onNotifSend done: ${response.statusCode}');
   }

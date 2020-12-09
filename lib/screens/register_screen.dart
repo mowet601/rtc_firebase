@@ -208,13 +208,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // String did = isSeniorDevice
       //     ? _deviceIdController.text.toLowerCase().trim()
       //     : deviceInfoId;
-      // String did = deviceInfoId;
-      String did = '7eee3c714aa425d6';
+      String did = deviceInfoId;
+      // String did = '7eee3c714aa425d6';
 
       print('OTP typed: $otp');
       print('DeviceId: $did');
 
-      String aflexRegisterUrl = 'https://admin.stellar.care/chat/register.php';
+      String aflexRegisterUrl = UVUE_REGISTER_URL;
       var response = await http.post(aflexRegisterUrl, body: {
         'otp': '$otp',
         'deviceId': '$did',
@@ -229,7 +229,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         var jsonobj = jsonDecode(jsonres);
         print(jsonobj);
         if (jsonobj['success'] == 1) {
-          // Box b = Hive.box('myprofile');
           await box.put('myname', jsonobj['userName']);
           await box.put('myid', jsonobj['userId']);
           await box.put('mytype', otp == '1234' ? 'Resident' : 'Contact');
@@ -242,19 +241,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             MaterialPageRoute(builder: (context) => HomeScreen()),
           );
         } else {
-          print('invalid otp code');
-          Utils.makeToast(
-              'Invalid Code. Please contact uVue admin', Colors.deepOrange);
+          print('invalid otp code: $otp $did');
+          Utils.makeToast('Invalid Code. Please contact uVue admin. $otp, $did',
+              Colors.deepOrange);
         }
       } else {
-        print('no json response returned');
-        Utils.makeToast('No Json response returned', Colors.deepOrange);
+        print('No json response returned. ');
+        Utils.makeToast('No Json response returned. Please contact uVue admin',
+            Colors.deepOrange);
       }
     } else
       Utils.makeToast(
           'Cannot Register without Code or Device Id', Colors.deepOrange);
 
-    //
     setState(() => _isLoggingIn = false);
   }
 
